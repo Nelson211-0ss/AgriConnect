@@ -22,28 +22,29 @@ export function MobilePriceCard({
   const color = commodityColor(commodity, index);
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-soft dark:bg-surface-elevated">
+    <div className="flex items-center gap-2.5 rounded-2xl bg-surface p-3 shadow-soft dark:bg-surface-elevated sm:gap-3">
       <div
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white sm:h-11 sm:w-11"
         style={{ background: color }}
       >
-        <Sprout size={22} />
+        <Sprout size={20} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-ink">{commodity}</p>
+        <p className="truncate font-semibold text-ink">{commodity}</p>
         <p className="truncate text-xs text-content-muted">{market}</p>
       </div>
-      <div className="text-right">
-        <p className="font-bold text-forest dark:text-leaf">
-          {SSP(price)}<span className="text-xs font-normal text-content-muted">/{unit}</span>
+      <div className="shrink-0 text-right">
+        <p className="text-sm font-bold leading-tight text-forest dark:text-leaf sm:text-base">
+          {SSP(price)}
+          <span className="text-[10px] font-normal text-content-muted sm:text-xs">/{unit}</span>
         </p>
         <p
-          className={`inline-flex items-center justify-end gap-0.5 text-xs font-semibold ${
+          className={`inline-flex items-center justify-end gap-0.5 text-[11px] font-semibold sm:text-xs ${
             up ? 'text-forest dark:text-leaf' : down ? 'text-red-500' : 'text-content-muted'
           }`}
         >
-          {up && <TrendingUp size={12} />}
-          {down && <TrendingDown size={12} />}
+          {up && <TrendingUp size={11} />}
+          {down && <TrendingDown size={11} />}
           {up ? '+' : ''}
           {changePct}%
         </p>

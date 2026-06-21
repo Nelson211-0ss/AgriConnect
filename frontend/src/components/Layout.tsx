@@ -80,6 +80,8 @@ export function Layout() {
     user?.role
   );
 
+  const isMobileApp = user?.role === 'farmer' || user?.role === 'buyer';
+
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
       <div className={cn('flex items-center gap-2.5 px-4 h-16 border-b border-white/10', collapsed && 'justify-center px-2')}>
@@ -134,7 +136,12 @@ export function Layout() {
   );
 
   return (
-    <div className="box-border flex h-screen overflow-hidden gap-4 bg-mist p-4 font-sans antialiased md:gap-6 md:p-6 lg:p-8">
+    <div
+      className={cn(
+        'box-border flex h-screen overflow-hidden bg-mist font-sans antialiased',
+        isMobileApp ? 'md:gap-6 md:p-6 lg:p-8' : 'gap-4 p-4 md:gap-6 md:p-6 lg:p-8'
+      )}
+    >
       <FarmerLoginAlertsModal />
       {/* Desktop sidebar */}
       <aside
@@ -157,8 +164,31 @@ export function Layout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="mb-2 flex h-14 shrink-0 items-center gap-2 border border-line bg-surface px-3 md:mb-6 md:h-16 md:gap-3 md:px-6 dark:border-line dark:bg-surface-elevated">
+        {isMobileApp && (
+          <header className="flex h-11 shrink-0 items-center justify-between border-b border-line bg-surface px-3 md:hidden dark:border-line dark:bg-surface-elevated">
+            <button
+              type="button"
+              className="rounded-lg p-2 text-content-muted transition hover:bg-surface-muted dark:hover:bg-slate-800"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu size={20} />
+            </button>
+            <span className="text-sm font-bold text-forest dark:text-leaf">AgriConnect</span>
+            <div className="flex items-center gap-0.5">
+              <ThemeToggle />
+              <NotificationBell enabled={user?.role === 'farmer'} />
+            </div>
+          </header>
+        )}
+
+        {/* Desktop topbar */}
+        <header
+          className={cn(
+            'mb-2 flex h-14 shrink-0 items-center gap-2 border border-line bg-surface px-3 md:mb-6 md:h-16 md:gap-3 md:px-6 dark:border-line dark:bg-surface-elevated',
+            isMobileApp && 'hidden md:flex'
+          )}
+        >
           <button className="hidden rounded-lg p-2 text-content-muted transition hover:bg-surface-muted md:inline-flex dark:hover:bg-slate-800" onClick={() => setCollapsed((c) => !c)}>
             <ChevronLeft size={20} className={cn('transition-transform', collapsed && 'rotate-180')} />
           </button>
@@ -189,8 +219,8 @@ export function Layout() {
 
         <main
           className={cn(
-            'flex-1 overflow-y-auto font-sans',
-            (user?.role === 'farmer' || user?.role === 'buyer') && 'pb-20 md:pb-0'
+            'flex-1 overflow-x-hidden overflow-y-auto font-sans',
+            isMobileApp && 'pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-0'
           )}
         >
           <Outlet />

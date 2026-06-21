@@ -3,8 +3,7 @@ import { Plus, MapPin, Phone, Package, Trash2, HandHeart, Sprout, ShoppingCart, 
 import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
-import { RoleWelcome } from '@/components/RoleWelcome';
-import { MobileShell, MobilePageHeader } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileToolbar, MobileContent } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { SSP, formatNumber, timeAgo, fileToCompressedDataUrl, cn } from '@/lib/utils';
 
@@ -66,7 +65,7 @@ export default function Marketplace() {
   const isFarmer = user?.role === 'farmer';
   const isBuyer = user?.role === 'buyer';
   const isAdmin = user?.role === 'super_admin';
-  const showWelcome = isFarmer || isBuyer;
+  const isMobileApp = isFarmer || isBuyer;
 
   const [tab, setTab] = useState<'produce' | 'demand'>(isBuyer ? 'demand' : 'produce');
   const [filter, setFilter] = useState('');
@@ -86,45 +85,9 @@ export default function Marketplace() {
 
   return (
     <div className="animate-fade-in">
-      {showWelcome ? (
-        <>
-          <RoleWelcome />
-          <MobileShell className="sm:-mx-0">
-            <MobilePageHeader
-              title="Marketplace"
-              subtitle="Farmer produce & buyer demand"
-            />
-            <MarketplaceBody
-              tab={tab}
-              setTab={setTab}
-              filter={filter}
-              setFilter={setFilter}
-              listingCounts={listingCounts}
-              isFarmer={isFarmer}
-              isBuyer={isBuyer}
-              isAdmin={isAdmin}
-              refreshCounts={refreshCounts}
-              mobile
-            />
-          </MobileShell>
-          <div className="hidden md:block">
-            <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
-            <MarketplaceBody
-              tab={tab}
-              setTab={setTab}
-              filter={filter}
-              setFilter={setFilter}
-              listingCounts={listingCounts}
-              isFarmer={isFarmer}
-              isBuyer={isBuyer}
-              isAdmin={isAdmin}
-              refreshCounts={refreshCounts}
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+      {isMobileApp && (
+        <MobileShell>
+          <MobilePageHeader title="Marketplace" subtitle="Farmer produce & buyer demand" />
           <MarketplaceBody
             tab={tab}
             setTab={setTab}
@@ -135,9 +98,24 @@ export default function Marketplace() {
             isBuyer={isBuyer}
             isAdmin={isAdmin}
             refreshCounts={refreshCounts}
+            mobile
           />
-        </>
+        </MobileShell>
       )}
+      <div className={cn(isMobileApp && 'hidden md:block')}>
+        <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+        <MarketplaceBody
+          tab={tab}
+          setTab={setTab}
+          filter={filter}
+          setFilter={setFilter}
+          listingCounts={listingCounts}
+          isFarmer={isFarmer}
+          isBuyer={isBuyer}
+          isAdmin={isAdmin}
+          refreshCounts={refreshCounts}
+        />
+      </div>
     </div>
   );
 }
@@ -167,13 +145,68 @@ function MarketplaceBody({
 }) {
   return (
     <>
+      {mobile ? (
+        <>
+          <MobileToolbar>
+            <div className="flex w-full gap-1 rounded-2xl bg-surface-muted p-1 dark:bg-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setTab('produce');
+                  setFilter('');
+                }}
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-medium transition sm:text-sm',
+                  tab === 'produce' ? 'bg-forest text-white shadow-sm' : 'text-content-muted'
+                )}
+              >
+                <Sprout size={15} />
+                <span>Produce</span>
+                {tab === 'produce' && listingCounts[''] != null && (
+                  <span className="rounded-full bg-white/20 px-1.5 text-[10px]">{listingCounts['']}</span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTab('demand');
+                  setFilter('');
+                }}
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-1 rounded-xl py-2 text-xs font-medium transition sm:text-sm',
+                  tab === 'demand' ? 'bg-forest text-white shadow-sm' : 'text-content-muted'
+                )}
+              >
+                <ShoppingCart size={15} />
+                <span>Demand</span>
+                {tab === 'demand' && listingCounts[''] != null && (
+                  <span className="rounded-full bg-white/20 px-1.5 text-[10px]">{listingCounts['']}</span>
+                )}
+              </button>
+            </div>
+            <Select
+              label={tab === 'produce' ? 'Filter produce' : 'Filter demand'}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="">All ({listingCounts[''] ?? 0})</option>
+              {COMMODITIES.map((c) => (
+                <option key={c} value={c}>
+                  {c} ({listingCounts[c] ?? 0})
+                </option>
+              ))}
+            </Select>
+          </MobileToolbar>
+          {tab === 'produce' ? (
+            <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} onUpdated={refreshCounts} mobile />
+          ) : (
+            <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} onUpdated={refreshCounts} mobile />
+          )}
+        </>
+      ) : (
+        <>
       {/* Tab switcher */}
-      <div
-        className={cn(
-          'mb-5 inline-flex rounded-md border border-line bg-surface p-1 dark:border-line dark:bg-surface-elevated',
-          mobile && 'mx-4 mt-4 w-[calc(100%-2rem)] justify-stretch rounded-2xl'
-        )}
-      >
+      <div className="mb-5 inline-flex rounded-md border border-line bg-surface p-1 dark:border-line dark:bg-surface-elevated">
         <button
           onClick={() => {
             setTab('produce');
@@ -207,7 +240,7 @@ function MarketplaceBody({
       </div>
 
       {/* Commodity filter */}
-      <div className={cn('mb-4 max-w-sm', mobile && 'mx-4 max-w-none')}>
+      <div className="mb-4 max-w-sm">
         <Select
           label={tab === 'produce' ? 'Filter produce' : 'Filter demand'}
           value={filter}
@@ -223,9 +256,11 @@ function MarketplaceBody({
       </div>
 
       {tab === 'produce' ? (
-        <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} onUpdated={refreshCounts} mobile={mobile} />
+        <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} onUpdated={refreshCounts} />
       ) : (
-        <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} onUpdated={refreshCounts} mobile={mobile} />
+        <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} onUpdated={refreshCounts} />
+      )}
+        </>
       )}
     </>
   );
@@ -276,8 +311,76 @@ function ProduceTab({
 
   return (
     <>
+      {mobile ? (
+        <MobileContent>
+          {canPost && (
+            <Button className="w-full" onClick={() => setOpen(true)}>
+              <Plus size={16} /> Post Produce
+            </Button>
+          )}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-7 w-7" />
+            </div>
+          ) : rows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-content-muted">No produce listed yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {rows.map((l) => (
+                <Card key={l.id} className="overflow-hidden shadow-soft">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-surface-muted dark:bg-slate-800">
+                    <img src={produceImage(l)} alt={l.commodity} className="h-full w-full object-cover" loading="lazy" />
+                    <div className="absolute left-2.5 top-2.5">
+                      <Badge tone={l.status === 'available' ? 'green' : 'gray'} className="shadow-sm">
+                        {l.status === 'available' ? 'Available' : 'Sold'}
+                      </Badge>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                      <div className="flex items-end justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="truncate text-base font-bold text-white">{l.commodity}</h3>
+                          <p className="truncate text-xs text-white/80">by {l.farmer_name}</p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <div className="text-sm font-bold text-white">{SSP(l.price)}</div>
+                          <div className="text-[10px] text-white/80">per {l.unit}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <CardBody className="space-y-3 pt-3">
+                    {l.description && <p className="line-clamp-2 text-sm text-content-muted">{l.description}</p>}
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                      <span className="text-content-muted">Quantity</span>
+                      <span className="text-right font-medium text-ink">{formatNumber(l.quantity)} {l.unit}</span>
+                      <span className="text-content-muted">Location</span>
+                      <span className="truncate text-right text-ink">{l.location || l.county}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-line pt-3 dark:border-line">
+                      <span className="text-[11px] text-content-faint">{l.interests} interested</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {canBuy && l.status === 'available' && (
+                          <Button size="sm" variant="outline" onClick={() => showInterest(l.id)}>
+                            <HandHeart size={14} /> Contact
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <button type="button" onClick={() => remove(l.id)} className="rounded-md p-1.5 text-content-muted hover:bg-red-50 hover:text-red-600">
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          )}
+        </MobileContent>
+      ) : (
+        <>
       {canPost && (
-        <div className={cn('mb-4 flex justify-end', mobile && 'mx-4')}>
+        <div className="mb-4 flex justify-end">
           <Button onClick={() => setOpen(true)}>
             <Plus size={16} /> Post Produce
           </Button>
@@ -293,7 +396,7 @@ function ProduceTab({
           <EmptyState title="No produce listed yet" hint="Farmers can post produce with photos for buyers to browse." />
         </Card>
       ) : (
-        <div className={cn('grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', mobile && 'px-4')}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((l) => (
             <Card key={l.id} className="flex flex-col overflow-hidden transition hover:shadow-card">
               {/* Photo */}
@@ -352,6 +455,8 @@ function ProduceTab({
             </Card>
           ))}
         </div>
+      )}
+        </>
       )}
 
       {open && (
@@ -543,8 +648,69 @@ function DemandTab({
 
   return (
     <>
+      {mobile ? (
+        <MobileContent>
+          {canPost && (
+            <Button className="w-full" onClick={() => setOpen(true)}>
+              <Plus size={16} /> Post Demand
+            </Button>
+          )}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-7 w-7" />
+            </div>
+          ) : rows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-content-muted">No demand posted yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {rows.map((l) => (
+                <Card key={l.id} className="shadow-soft">
+                  <CardBody className="space-y-3 pt-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                          <Package size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="truncate font-bold text-ink">{l.commodity}</h3>
+                          <p className="truncate text-xs text-content-muted">{l.buyer_name}</p>
+                        </div>
+                      </div>
+                      <Badge tone={l.status === 'open' ? 'green' : 'gray'}>{l.status}</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+                      <span className="text-content-muted">Quantity</span>
+                      <span className="text-right font-medium text-ink">{formatNumber(l.quantity)} {l.unit}</span>
+                      <span className="text-content-muted">Price</span>
+                      <span className="text-right font-semibold text-forest">{SSP(l.price)}/{l.unit}</span>
+                      <span className="text-content-muted">Delivery</span>
+                      <span className="truncate text-right text-ink">{l.delivery_location}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-line pt-3 dark:border-line">
+                      <span className="text-[11px] text-content-faint">{l.interests} interested</span>
+                      <div className="flex shrink-0 items-center gap-1">
+                        {canShowInterest && (
+                          <Button size="sm" variant="outline" onClick={() => expressInterest(l.id)}>
+                            <HandHeart size={14} /> Interest
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <button type="button" onClick={() => remove(l.id)} className="rounded-md p-1.5 text-content-muted hover:bg-red-50 hover:text-red-600">
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          )}
+        </MobileContent>
+      ) : (
+        <>
       {canPost && (
-        <div className={cn('mb-4 flex justify-end', mobile && 'mx-4')}>
+        <div className="mb-4 flex justify-end">
           <Button onClick={() => setOpen(true)}>
             <Plus size={16} /> Post Demand
           </Button>
@@ -560,7 +726,7 @@ function DemandTab({
           <EmptyState title="No demand posted yet" hint="Buyers can post buying opportunities here." />
         </Card>
       ) : (
-        <div className={cn('grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', mobile && 'px-4')}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((l) => (
             <Card key={l.id} className="flex flex-col transition hover:shadow-card">
               <CardBody className="flex flex-1 flex-col pt-5">
@@ -609,6 +775,8 @@ function DemandTab({
             </Card>
           ))}
         </div>
+      )}
+        </>
       )}
 
       <Modal open={open} onClose={() => setOpen(false)} title="Post Buying Opportunity">

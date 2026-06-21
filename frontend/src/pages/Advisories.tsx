@@ -3,7 +3,7 @@ import { Plus, Search, Eye, Trash2, Sprout, Beef, CloudSun, Droplets, Bug, Mount
 import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
-import { MobileShell, MobilePageHeader, MobileSearchBar, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileSearchBar, MobileToolbar, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { formatDate, formatNumber, cn } from '@/lib/utils';
 
@@ -20,6 +20,15 @@ interface Advisory {
 }
 
 const CATEGORIES = ['Crop Production', 'Livestock', 'Climate Smart Agriculture', 'Irrigation', 'Pest Control', 'Soil Management'];
+const CATEGORY_LABELS: Record<string, string> = {
+  '': 'All',
+  'Crop Production': 'Crops',
+  Livestock: 'Livestock',
+  'Climate Smart Agriculture': 'Climate',
+  Irrigation: 'Water',
+  'Pest Control': 'Pests',
+  'Soil Management': 'Soil',
+};
 const ICONS: Record<string, typeof Sprout> = {
   'Crop Production': Sprout,
   Livestock: Beef,
@@ -87,13 +96,14 @@ export default function Advisories() {
           }
         />
         <MobileSearchBar value={search} onChange={setSearch} placeholder="Search advisories..." />
-        <div className="border-b border-line bg-surface px-4 py-3 dark:border-line dark:bg-surface-elevated">
+        <MobileToolbar className="border-t-0">
           <MobileChipRow
             items={['', ...CATEGORIES]}
             active={category}
             onSelect={setCategory}
+            labels={CATEGORY_LABELS}
           />
-        </div>
+        </MobileToolbar>
         <MobileContent>
           {loading ? (
             <div className="flex justify-center py-12">

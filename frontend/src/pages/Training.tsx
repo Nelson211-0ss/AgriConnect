@@ -3,7 +3,7 @@ import { GraduationCap, Award, Users, BookOpen, CheckCircle2 } from 'lucide-reac
 import { api } from '@/lib/api';
 import { Card, CardBody, Badge, Spinner } from '@/components/ui';
 import { PageHeader, StatCard } from '@/components/common';
-import { MobileShell, MobilePageHeader, MobileContent } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileSectionTitle, MobileContent } from '@/components/mobile';
 import { formatNumber } from '@/lib/utils';
 
 interface Course {
@@ -42,7 +42,7 @@ export default function Training() {
   ];
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in md:space-y-6">
       <MobileShell>
         <MobilePageHeader title="Training" subtitle="Climate-smart agriculture courses" />
         <MobileContent>
@@ -62,7 +62,8 @@ export default function Training() {
                 ))}
               </div>
 
-              <div className="space-y-2.5 pt-1">
+              <MobileSectionTitle className="mb-2">Courses</MobileSectionTitle>
+              <div className="space-y-3">
                 {courses.map((c) => (
                   <div key={c.id} className="rounded-2xl bg-surface p-4 shadow-soft dark:bg-surface-elevated">
                     <div className="flex items-start gap-3">

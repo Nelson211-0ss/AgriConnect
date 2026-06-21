@@ -95,7 +95,7 @@ export default function Settings() {
       />
 
       <MobileShell>
-        <div className="px-4 pb-5 pt-4 text-center text-white" style={{ background: 'linear-gradient(150deg,#0B7A3E,#064a25)' }}>
+        <div className="shrink-0 rounded-b-3xl px-4 pb-5 pt-2 text-center text-white" style={{ background: 'linear-gradient(150deg,#0B7A3E,#064a25)' }}>
           <div className="relative mx-auto w-fit">
             <UserAvatar name={user.name} avatarUrl={user.avatar_url} size="xl" />
             {uploading && (

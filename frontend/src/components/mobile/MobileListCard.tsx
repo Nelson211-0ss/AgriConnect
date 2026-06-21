@@ -25,22 +25,27 @@ export function MobileListCard({
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex w-full items-start gap-3 rounded-2xl bg-surface p-3 text-left shadow-soft dark:bg-surface-elevated',
+        'w-full rounded-2xl bg-surface p-3 text-left shadow-soft dark:bg-surface-elevated',
         onClick && 'transition active:scale-[0.99]',
         className
       )}
     >
-      <div
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white"
-        style={{ background: iconBg || '#0B7A3E' }}
-      >
-        <Icon size={20} />
+      <div className="flex gap-3">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white sm:h-11 sm:w-11"
+          style={{ background: iconBg || '#0B7A3E' }}
+        >
+          <Icon size={18} className="sm:hidden" />
+          <Icon size={20} className="hidden sm:block" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="line-clamp-2 font-semibold leading-snug text-ink">{title}</p>
+            {right && <div className="shrink-0">{right}</div>}
+          </div>
+          {subtitle && <div className="mt-1 text-xs leading-relaxed text-content-muted">{subtitle}</div>}
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-ink">{title}</p>
-        {subtitle && <div className="mt-0.5 text-xs text-content-muted">{subtitle}</div>}
-      </div>
-      {right && <div className="shrink-0 text-right">{right}</div>}
     </Tag>
   );
 }
@@ -49,24 +54,28 @@ export function MobileChipRow({
   items,
   active,
   onSelect,
+  labels,
 }: {
   items: string[];
   active: string;
   onSelect: (v: string) => void;
+  labels?: Record<string, string>;
 }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {items.map((item) => (
         <button
           key={item || 'all'}
           type="button"
           onClick={() => onSelect(item)}
           className={cn(
-            'whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition',
-            active === item ? 'bg-forest text-white' : 'bg-surface text-content-muted shadow-soft dark:bg-surface-elevated'
+            'shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition',
+            active === item
+              ? 'bg-forest text-white shadow-sm'
+              : 'bg-surface-muted text-content-muted dark:bg-slate-800'
           )}
         >
-          {item || 'All'}
+          {labels?.[item] ?? (item || 'All')}
         </button>
       ))}
     </div>

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
-import { Plus, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, CloudLightning, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Plus, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, CloudLightning, AlertTriangle, RefreshCw, Store, LineChart, BookOpen, Bug, Wallet, GraduationCap } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Card, CardHeader, CardBody, Select, Textarea, Modal, Badge, Spinner, severityTone } from '@/components/ui';
 import { PageHeader, CHART_COLORS } from '@/components/common';
-import { MobileShell, MobilePageHeader, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileToolbar, MobileSectionTitle, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { useChartTheme } from '@/lib/chartTheme';
 import { formatDate, timeAgo, cn } from '@/lib/utils';
@@ -54,6 +55,15 @@ const condIcon = (c: string) => {
 
 const ALERT_TYPES = ['Heavy Rain', 'Flood Warning', 'Drought Alert', 'Wind Warning'];
 const COUNTIES = ['Juba', 'Wau', 'Aweil', 'Bor', 'Rumbek'];
+
+const FARMER_QUICK = [
+  { to: '/app/marketplace', label: 'Market', icon: Store, tint: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300' },
+  { to: '/app/market', label: 'Prices', icon: LineChart, tint: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300' },
+  { to: '/app/advisories', label: 'Advice', icon: BookOpen, tint: 'bg-forest-50 text-forest dark:bg-forest-800/30 dark:text-leaf' },
+  { to: '/app/pests', label: 'Pests', icon: Bug, tint: 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-300' },
+  { to: '/app/financial', label: 'Finance', icon: Wallet, tint: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
+  { to: '/app/training', label: 'Training', icon: GraduationCap, tint: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' },
+];
 
 function shortForecastLabel(entry: Forecast): string {
   if (entry.day.startsWith('Today')) return 'Today';
@@ -149,13 +159,21 @@ export default function Weather() {
       })
     : null;
 
+  const firstName = user?.name.split(' ')[0];
+  const mobileSubtitle =
+    user?.role === 'farmer'
+      ? `Hello, ${firstName} · ${cur.county} County`
+      : data.fetchedAt
+      ? `Updated ${timeAgo(data.fetchedAt)}`
+      : 'Live forecast';
+
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in md:space-y-4">
       {/* Mobile app UI */}
       <MobileShell>
         <MobilePageHeader
           title="Weather"
-          subtitle={data.fetchedAt ? `Updated ${timeAgo(data.fetchedAt)}` : 'Live forecast'}
+          subtitle={mobileSubtitle}
           action={
             canEdit ? (
               <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
@@ -168,7 +186,7 @@ export default function Weather() {
             )
           }
         />
-        <div className="border-b border-line bg-surface px-4 py-3 dark:border-line dark:bg-surface-elevated">
+        <MobileToolbar>
           <MobileChipRow
             items={data.current.map((c) => c.county)}
             active={cur.county}
@@ -177,35 +195,54 @@ export default function Weather() {
               if (idx >= 0) setSelected(idx);
             }}
           />
-        </div>
-        <div className="px-4 pt-4">
-          <div className="rounded-2xl p-5 text-white shadow-soft" style={{ background: 'linear-gradient(150deg,#0B7A3E,#064a25)' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-80">{cur.county} County</p>
-                <p className="text-4xl font-bold">{cur.temperature}°C</p>
-                <p className="mt-1 text-sm opacity-90">{cur.condition}</p>
+        </MobileToolbar>
+        <MobileContent>
+          <div className="rounded-2xl p-4 text-white shadow-soft" style={{ background: 'linear-gradient(150deg,#0B7A3E,#064a25)' }}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs opacity-80">{cur.county} County</p>
+                <p className="text-3xl font-bold leading-none sm:text-4xl">{cur.temperature}°C</p>
+                <p className="mt-1 truncate text-sm opacity-90">{cur.condition}</p>
               </div>
-              <CondIcon size={56} className="opacity-90" />
+              <CondIcon size={44} className="shrink-0 opacity-90" />
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="rounded-xl bg-white/10 p-2">
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] sm:text-xs">
+              <div className="rounded-xl bg-white/10 px-1 py-2">
                 <p className="opacity-80">Humidity</p>
                 <p className="font-semibold">{cur.humidity}%</p>
               </div>
-              <div className="rounded-xl bg-white/10 p-2">
+              <div className="rounded-xl bg-white/10 px-1 py-2">
                 <p className="opacity-80">Rain</p>
                 <p className="font-semibold">{cur.rainfall}mm</p>
               </div>
-              <div className="rounded-xl bg-white/10 p-2">
+              <div className="rounded-xl bg-white/10 px-1 py-2">
                 <p className="opacity-80">Wind</p>
                 <p className="font-semibold">{cur.windSpeed} km/h</p>
               </div>
             </div>
           </div>
-        </div>
-        <MobileContent>
-          <p className="text-sm font-semibold text-ink">7-Day Forecast</p>
+
+          {user?.role === 'farmer' && (
+            <div>
+              <MobileSectionTitle className="mb-2">Quick Access</MobileSectionTitle>
+              <div className="grid grid-cols-3 gap-2">
+                {FARMER_QUICK.map((q) => (
+                  <Link
+                    key={q.label}
+                    to={q.to}
+                    className="flex flex-col items-center gap-1.5 rounded-2xl bg-surface p-2.5 text-center shadow-soft dark:bg-surface-elevated"
+                  >
+                    <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl', q.tint)}>
+                      <q.icon size={17} />
+                    </div>
+                    <span className="text-[10px] font-medium leading-tight text-content-muted">{q.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <MobileSectionTitle>7-Day Forecast</MobileSectionTitle>
           {chartForecast.map((day, i) => (
             <MobileListCard
               key={day.date}
@@ -226,8 +263,8 @@ export default function Weather() {
             />
           ))}
           {data.alerts.length > 0 && (
-            <>
-              <p className="pt-2 text-sm font-semibold text-ink">Active Alerts</p>
+            <div className="space-y-2">
+              <MobileSectionTitle>Active Alerts</MobileSectionTitle>
               {data.alerts.map((a) => (
                 <MobileListCard
                   key={a.id}
@@ -242,7 +279,7 @@ export default function Weather() {
                   }
                 />
               ))}
-            </>
+            </div>
           )}
         </MobileContent>
       </MobileShell>

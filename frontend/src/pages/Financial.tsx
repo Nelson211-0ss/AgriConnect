@@ -3,7 +3,7 @@ import { Banknote, PiggyBank, ShieldCheck, Percent, ArrowRight } from 'lucide-re
 import { api } from '@/lib/api';
 import { Card, CardBody, Badge, Spinner } from '@/components/ui';
 import { PageHeader } from '@/components/common';
-import { MobileShell, MobilePageHeader, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileToolbar, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
 import { SSP } from '@/lib/utils';
 
 interface Product {
@@ -48,7 +48,12 @@ export default function Financial() {
         title={p.name}
         subtitle={
           <>
-            <span>{p.provider}</span>
+            <span className="block truncate">{p.provider}</span>
+            {p.interest_rate > 0 && (
+              <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-forest-50 px-2 py-0.5 text-[11px] font-semibold text-forest-700 dark:bg-forest-800/30 dark:text-leaf">
+                <Percent size={10} /> {p.interest_rate}% APR
+              </span>
+            )}
             <p className="mt-1 line-clamp-2">{p.description}</p>
             <p className="mt-1 font-medium text-ink">
               {SSP(p.min_amount)} – {SSP(p.max_amount)}
@@ -56,27 +61,21 @@ export default function Financial() {
           </>
         }
         right={
-          p.interest_rate > 0 ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-forest-50 px-2 py-0.5 text-xs font-semibold text-forest-700 dark:bg-forest-800/30 dark:text-leaf">
-              <Percent size={11} /> {p.interest_rate}%
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-0.5 text-xs font-medium text-forest dark:text-leaf">
-              Apply <ArrowRight size={14} />
-            </span>
-          )
+          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-forest dark:text-leaf">
+            <ArrowRight size={14} />
+          </span>
         }
       />
     );
   };
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in md:space-y-6">
       <MobileShell>
         <MobilePageHeader title="Financial Services" subtitle="Loans, savings & insurance" />
-        <div className="border-b border-line bg-surface px-4 py-3 dark:border-line dark:bg-surface-elevated">
-          <MobileChipRow items={FILTER_CHIPS} active={filter} onSelect={setFilter} />
-        </div>
+        <MobileToolbar>
+          <MobileChipRow items={FILTER_CHIPS} active={filter} onSelect={setFilter} labels={{ '': 'All', Loan: 'Loans', Savings: 'Savings', Insurance: 'Insurance' }} />
+        </MobileToolbar>
         <MobileContent>
           {loading ? (
             <div className="flex justify-center py-12">

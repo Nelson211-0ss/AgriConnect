@@ -78,7 +78,7 @@ export default function Pests() {
     }));
 
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in md:space-y-4">
       <MobileShell>
         <MobilePageHeader
           title="Pest Alerts"

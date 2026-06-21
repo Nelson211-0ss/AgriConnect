@@ -43,8 +43,13 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface px-2 py-2 shadow-card dark:border-line dark:bg-surface-elevated md:hidden">
-      <div className={cn('mx-auto flex max-w-lg items-center justify-around', tabs.length <= 3 && 'justify-evenly')}>
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md dark:border-line dark:bg-surface-elevated/95 md:hidden">
+      <div
+        className={cn(
+          'mx-auto flex max-w-lg items-center justify-around px-1 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5',
+          tabs.length <= 3 && 'justify-evenly'
+        )}
+      >
         {tabs.map((tab) => {
           const active = isActive(tab);
           return (
@@ -52,12 +57,12 @@ export function MobileBottomNav() {
               key={tab.to}
               to={tab.to}
               className={cn(
-                'flex min-w-[4rem] flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-medium transition',
+                'flex min-w-0 flex-1 max-w-[5rem] flex-col items-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-medium transition',
                 active ? 'text-forest dark:text-leaf' : 'text-content-muted'
               )}
             >
-              <tab.icon size={22} className={active ? 'text-forest dark:text-leaf' : undefined} />
-              {tab.label}
+              <tab.icon size={21} strokeWidth={active ? 2.25 : 2} className={active ? 'text-forest dark:text-leaf' : undefined} />
+              <span className="truncate">{tab.label}</span>
             </NavLink>
           );
         })}

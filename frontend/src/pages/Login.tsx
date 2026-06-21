@@ -6,6 +6,7 @@ import { Button, Input } from '@/components/ui';
 import { DEFAULT_PASSWORD, homeRoute } from '@/lib/constants';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LoginFarmerSlider, LOGIN_SLIDES } from '@/components/LoginFarmerSlider';
+import { cn } from '@/lib/utils';
 
 const DEMO = [
   { label: 'Super Admin', email: 'admin@corwado.org' },
@@ -39,97 +40,130 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left brand panel — farmer images as full background */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 text-white lg:flex">
+    <div className="flex min-h-[100dvh]">
+      {/* Left brand panel */}
+      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-10 text-white xl:p-12 lg:flex">
         <LoginFarmerSlider onActiveChange={setSlideIndex} />
 
         <div className="relative z-10 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
             <Leaf size={24} />
           </div>
-          <div>
-            <div className="text-lg font-bold">CORWADO AgriConnect</div>
+          <div className="min-w-0">
+            <div className="text-lg font-bold leading-tight">CORWADO AgriConnect</div>
             <div className="text-sm text-leaf-light">Digital Agriculture Platform</div>
           </div>
         </div>
 
-        <div className="relative z-10 flex flex-1 flex-col justify-center py-6">
-          <h1 className="text-4xl font-bold leading-tight drop-shadow-sm">Empowering smallholder farmers across South Sudan</h1>
-          <p className="mt-4 max-w-md text-leaf-light">
+        <div className="relative z-10 flex flex-1 flex-col justify-center py-8">
+          <h1 className="max-w-lg text-4xl font-bold leading-tight drop-shadow-sm xl:text-[2.75rem] xl:leading-tight">
+            Empowering smallholder farmers across South Sudan
+          </h1>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-leaf-light">
             Connecting farmers, extension workers, buyers and financial services through SMS, WhatsApp and a unified web platform.
           </p>
 
-          <p className="mt-6 max-w-md border-l-2 border-leaf-light/60 pl-4 text-sm text-white/80 transition-opacity duration-500">
-            <span className="block text-xs font-medium uppercase tracking-wider text-leaf-light">{activeSlide.location}</span>
+          <blockquote className="mt-8 max-w-md border-l-2 border-leaf-light/60 pl-4 text-sm leading-relaxed text-white/85 transition-opacity duration-500">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-leaf-light">{activeSlide.location}</span>
             {activeSlide.caption}
-          </p>
+          </blockquote>
 
-          <div className="mt-10 grid grid-cols-3 gap-6">
+          <div className="mt-10 grid max-w-md grid-cols-3 gap-4 sm:gap-6">
             {[
               ['1,000+', 'Farmers'],
               ['5', 'Counties'],
               ['50+', 'Officers'],
             ].map(([n, l]) => (
               <div key={l}>
-                <div className="text-3xl font-bold">{n}</div>
-                <div className="text-sm text-leaf-light">{l}</div>
+                <div className="text-2xl font-bold sm:text-3xl">{n}</div>
+                <div className="mt-0.5 text-sm text-leaf-light">{l}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="relative z-10 text-xs text-white/60">In partnership with the Norwegian Embassy & Ministry of Agriculture</p>
+        <p className="relative z-10 text-xs leading-relaxed text-white/60">
+          In partnership with the Norwegian Embassy &amp; Ministry of Agriculture
+        </p>
       </div>
 
-      {/* Right form */}
-      <div className="relative flex w-full items-center justify-center bg-mist px-6 lg:w-1/2">
-        <div className="absolute right-6 top-6">
+      {/* Right form panel */}
+      <div className="relative flex min-h-[100dvh] w-full flex-col bg-mist lg:w-1/2">
+        <header className="flex shrink-0 justify-end px-5 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 lg:px-10">
           <ThemeToggle />
-        </div>
-        <div className="w-full max-w-md">
-          <div className="mb-8 lg:hidden">
-            <div className="flex items-center gap-2 text-forest">
-              <Leaf size={26} />
-              <span className="text-xl font-bold">CORWADO AgriConnect</span>
+        </header>
+
+        <div className="flex flex-1 flex-col justify-center px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 lg:px-10 lg:pb-10 xl:px-14">
+          <div className="mx-auto w-full max-w-[26rem]">
+            {/* Mobile / tablet brand */}
+            <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-forest text-white shadow-sm">
+                <Leaf size={22} />
+              </div>
+              <div className="min-w-0 text-left">
+                <p className="truncate text-base font-bold text-ink">CORWADO AgriConnect</p>
+                <p className="text-xs text-content-muted">Digital Agriculture Platform</p>
+              </div>
             </div>
-          </div>
-          <h2 className="text-2xl font-bold text-ink">Welcome back</h2>
-          <p className="mt-1 text-sm text-slate-500">Sign in to your extension platform account</p>
 
-          <form onSubmit={submit} className="mt-6 space-y-4">
-            <Input label="Email address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            {error && <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-300">{error}</div>}
-            <Button type="submit" size="lg" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" size={18} /> : 'Sign in'}
-            </Button>
-          </form>
+            <div className="rounded-2xl border border-line bg-surface p-6 shadow-soft sm:p-8 dark:border-line dark:bg-surface-elevated">
+              <div className="text-center lg:text-left">
+                <h2 className="text-2xl font-bold tracking-tight text-ink">Welcome back</h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-content-muted">Sign in to your extension platform account</p>
+              </div>
 
-          <div className="mt-6">
-            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-slate-400">Quick demo login ({DEFAULT_PASSWORD})</p>
-            <div className="grid grid-cols-2 gap-2">
-              {DEMO.map((d) => (
-                <button
-                  key={d.email}
-                  onClick={() => {
-                    setEmail(d.email);
-                    setPassword(DEFAULT_PASSWORD);
-                  }}
-                  className="rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium text-content-muted transition hover:border-forest hover:text-forest dark:border-line dark:bg-surface-elevated"
-                >
-                  {d.label}
-                </button>
-              ))}
+              <form onSubmit={submit} className="mt-6 space-y-4">
+                <Input label="Email address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+                {error && (
+                  <div className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm leading-snug text-red-600 dark:bg-red-500/10 dark:text-red-300" role="alert">
+                    {error}
+                  </div>
+                )}
+                <Button type="submit" size="lg" className="mt-1 w-full" disabled={loading}>
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : 'Sign in'}
+                </Button>
+              </form>
+
+              <div className="mt-6 border-t border-line pt-6 dark:border-line">
+                <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-wider text-content-faint">
+                  Quick demo login
+                  <span className="mt-0.5 block font-normal normal-case tracking-normal text-content-muted">Password: {DEFAULT_PASSWORD}</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {DEMO.map((d) => {
+                    const active = email === d.email;
+                    return (
+                      <button
+                        key={d.email}
+                        type="button"
+                        onClick={() => {
+                          setEmail(d.email);
+                          setPassword(DEFAULT_PASSWORD);
+                          setError('');
+                        }}
+                        className={cn(
+                          'flex min-h-[2.75rem] items-center justify-center rounded-xl border px-2.5 py-2 text-center text-xs font-medium leading-tight transition sm:text-sm',
+                          active
+                            ? 'border-forest bg-forest-50 text-forest dark:border-leaf dark:bg-forest/20 dark:text-leaf'
+                            : 'border-line bg-surface-muted text-content-muted hover:border-forest hover:text-forest dark:border-line dark:bg-slate-800 dark:hover:border-leaf dark:hover:text-leaf'
+                        )}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            New buyer or farmer?{' '}
-            <Link to="/register" className="font-semibold text-forest hover:underline">
-              Create an account
-            </Link>
-          </p>
+            <p className="mt-6 text-center text-sm leading-relaxed text-content-muted">
+              New buyer or farmer?{' '}
+              <Link to="/register" className="font-semibold text-forest hover:underline dark:text-leaf">
+                Create an account
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

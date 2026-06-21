@@ -66,7 +66,7 @@ export default function Market() {
   };
 
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="animate-fade-in md:space-y-4">
       {/* Mobile app UI */}
       <MobileShell>
         <MobilePageHeader

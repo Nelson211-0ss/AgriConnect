@@ -3,7 +3,7 @@ import { Users, Bug, Store } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardHeader, CardBody, Spinner } from '@/components/ui';
 import { PageHeader } from '@/components/common';
-import { MobileShell, MobilePageHeader, MobileContent, MobileChipRow } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileToolbar, MobileContent, MobileChipRow } from '@/components/mobile';
 import { LeafletMap, MapPoint } from '@/components/LeafletMap';
 import { cn } from '@/lib/utils';
 
@@ -78,9 +78,9 @@ export default function MapsView() {
     <div className="animate-fade-in space-y-4">
       <MobileShell>
         <MobilePageHeader title="Geographic Maps" subtitle="Farmers, outbreaks & markets" />
-        <div className="border-b border-line bg-surface px-4 py-3 dark:border-line dark:bg-surface-elevated">
+        <MobileToolbar>
           <MobileChipRow items={layers.map((l) => l.label)} active={activeLayer.label} onSelect={(label) => setLayer(layers.find((l) => l.label === label)!.key)} />
-        </div>
+        </MobileToolbar>
         <MobileContent className="space-y-3">
           <div className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-soft dark:bg-surface-elevated">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest text-white">
