@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db';
 import { asyncHandler, authenticate, authorize, AuthedRequest } from '../utils';
+import { notifyFarmers } from '../services/notifyService';
 
 const router = Router();
 router.use(authenticate);
@@ -40,8 +41,20 @@ router.post(
       'INSERT INTO advisories(title,category,content,image_url,status,scheduled_at,author_id) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *',
       [b.title, b.category, b.content, b.image_url || null, b.status || 'published', b.scheduled_at || null, req.user?.id || null]
     );
+    const advisory = rows[0];
     await query("INSERT INTO activity_log(type,description) VALUES('advisory',$1)", [`New advisory published: ${b.title}`]);
-    res.status(201).json(rows[0]);
+    if ((b.status || 'published') === 'published') {
+      await notifyFarmers({
+        type: 'advisory',
+        title: `New advisory: ${b.title}`,
+        message: String(b.content).slice(0, 240),
+        severity: 'moderate',
+        county: null,
+        sourceId: advisory.id,
+        senderId: req.user?.id,
+      });
+    }
+    res.status(201).json(advisory);
   })
 );
 

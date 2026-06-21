@@ -5,16 +5,22 @@ import { asyncHandler, authenticate, authorize, AuthedRequest } from '../utils';
 const router = Router();
 router.use(authenticate);
 
+// Buyers see only their demands; farmers and other roles see all buyer demands
 router.get(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: AuthedRequest, res) => {
     const commodity = String(req.query.commodity || '').trim();
     const params: unknown[] = [];
-    let whereSql = '';
+    const where: string[] = [];
+    if (req.user?.role === 'buyer') {
+      params.push(req.user.id);
+      where.push(`buyer_id=$${params.length}`);
+    }
     if (commodity) {
       params.push(commodity);
-      whereSql = 'WHERE commodity=$1';
+      where.push(`commodity=$${params.length}`);
     }
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const rows = await query(
       `SELECT m.*, (SELECT count(*)::int FROM listing_interests li WHERE li.listing_id=m.id) AS interests
        FROM marketplace_listings m ${whereSql} ORDER BY created_at DESC`,
@@ -58,9 +64,13 @@ router.post(
 router.delete(
   '/:id',
   authorize('super_admin', 'buyer'),
-  asyncHandler(async (req, res) => {
-    const { rowCount } = await query('DELETE FROM marketplace_listings WHERE id=$1', [req.params.id]);
-    if (!rowCount) return res.status(404).json({ message: 'Listing not found' });
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const owned =
+      req.user?.role === 'super_admin'
+        ? await query('SELECT id FROM marketplace_listings WHERE id=$1', [req.params.id])
+        : await query('SELECT id FROM marketplace_listings WHERE id=$1 AND buyer_id=$2', [req.params.id, req.user?.id]);
+    if (!owned.rowCount) return res.status(404).json({ message: 'Listing not found' });
+    await query('DELETE FROM marketplace_listings WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   })
 );

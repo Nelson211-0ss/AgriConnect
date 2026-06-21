@@ -10,8 +10,8 @@ const variants: Record<Variant, string> = {
   primary: 'bg-forest text-white hover:bg-forest-700 shadow-sm',
   accent: 'bg-accent text-white hover:bg-accent/90 shadow-sm',
   secondary: 'bg-leaf text-white hover:bg-leaf/90 shadow-sm',
-  outline: 'border border-slate-200 bg-white text-ink hover:bg-slate-50',
-  ghost: 'text-slate-600 hover:bg-slate-100',
+  outline: 'border border-line bg-surface text-ink hover:bg-surface-muted dark:border-line dark:bg-surface-elevated dark:hover:bg-slate-800',
+  ghost: 'text-content-muted hover:bg-surface-muted dark:hover:bg-surface-elevated',
   danger: 'bg-red-600 text-white hover:bg-red-700',
 };
 const sizes: Record<Size, string> = {
@@ -45,14 +45,18 @@ export function Button({
 
 /* ---------------- Card ---------------- */
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn('rounded-md bg-white shadow-soft border border-slate-100', className)}>{children}</div>;
+  return (
+    <div className={cn('rounded-md border border-line-subtle bg-surface shadow-soft dark:border-line dark:bg-surface-elevated', className)}>
+      {children}
+    </div>
+  );
 }
 export function CardHeader({ title, subtitle, action }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex items-start justify-between px-5 pt-5 pb-3">
       <div>
         <h3 className="font-semibold text-ink">{title}</h3>
-        {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="mt-0.5 text-sm text-content-muted">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -66,11 +70,11 @@ export function CardBody({ className, children }: { className?: string; children
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { label?: string }>(
   ({ className, label, ...props }, ref) => (
     <label className="block">
-      {label && <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>}
+      {label && <span className="mb-1.5 block text-sm font-medium text-content">{label}</span>}
       <input
         ref={ref}
         className={cn(
-          'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 transition',
+          'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-content-faint transition focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 dark:border-line dark:bg-surface-elevated dark:focus:bg-surface-elevated',
           className
         )}
         {...props}
@@ -83,10 +87,10 @@ Input.displayName = 'Input';
 export function Textarea({ className, label, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) {
   return (
     <label className="block">
-      {label && <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>}
+      {label && <span className="mb-1.5 block text-sm font-medium text-content">{label}</span>}
       <textarea
         className={cn(
-          'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 transition',
+          'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-content-faint transition focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 dark:border-line dark:bg-surface-elevated',
           className
         )}
         {...props}
@@ -98,10 +102,10 @@ export function Textarea({ className, label, ...props }: TextareaHTMLAttributes<
 export function Select({ className, label, children, ...props }: SelectHTMLAttributes<HTMLSelectElement> & { label?: string }) {
   return (
     <label className="block">
-      {label && <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>}
+      {label && <span className="mb-1.5 block text-sm font-medium text-content">{label}</span>}
       <select
         className={cn(
-          'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-ink focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 transition',
+          'w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink transition focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/20 dark:border-line dark:bg-surface-elevated',
           className
         )}
         {...props}
@@ -115,11 +119,11 @@ export function Select({ className, label, children, ...props }: SelectHTMLAttri
 /* ---------------- Badge ---------------- */
 type Tone = 'green' | 'gray' | 'amber' | 'red' | 'blue';
 const tones: Record<Tone, string> = {
-  green: 'bg-forest-50 text-forest-700',
-  gray: 'bg-slate-100 text-slate-600',
-  amber: 'bg-amber-50 text-amber-700',
-  red: 'bg-red-50 text-red-600',
-  blue: 'bg-blue-50 text-blue-600',
+  green: 'bg-forest-50 text-forest-700 dark:bg-forest/20 dark:text-leaf',
+  gray: 'bg-surface-muted text-content-muted dark:bg-slate-800 dark:text-slate-300',
+  amber: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+  red: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300',
+  blue: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300',
 };
 export function Badge({ tone = 'gray', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
   return <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', tones[tone], className)}>{children}</span>;
@@ -144,11 +148,11 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={cn('relative z-10 w-full rounded-2xl bg-white shadow-card animate-fade-in', wide ? 'max-w-3xl' : 'max-w-lg')}>
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60" onClick={onClose} />
+      <div className={cn('relative z-10 w-full animate-fade-in rounded-2xl bg-surface shadow-card dark:bg-surface-elevated', wide ? 'max-w-3xl' : 'max-w-lg')}>
+        <div className="flex items-center justify-between border-b border-line-subtle px-5 py-4 dark:border-line">
           <h3 className="font-semibold text-ink">{title}</h3>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-content-faint hover:bg-surface-muted hover:text-content dark:hover:bg-slate-800">
             <X size={18} />
           </button>
         </div>
@@ -167,21 +171,25 @@ export function Table({ children }: { children: ReactNode }) {
   );
 }
 export function Th({ children, className }: { children?: ReactNode; className?: string }) {
-  return <th className={cn('whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-400', className)}>{children}</th>;
+  return (
+    <th className={cn('whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-content-faint', className)}>
+      {children}
+    </th>
+  );
 }
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
-  return <td className={cn('whitespace-nowrap px-4 py-3 text-slate-700', className)}>{children}</td>;
+  return <td className={cn('whitespace-nowrap px-4 py-3 text-content', className)}>{children}</td>;
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <div className={cn('h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-forest', className)} />;
+  return <div className={cn('h-5 w-5 animate-spin rounded-full border-2 border-line border-t-forest dark:border-slate-700', className)} />;
 }
 
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <p className="font-medium text-slate-600">{title}</p>
-      {hint && <p className="mt-1 text-sm text-slate-400">{hint}</p>}
+      <p className="font-medium text-content-muted">{title}</p>
+      {hint && <p className="mt-1 text-sm text-content-faint">{hint}</p>}
     </div>
   );
 }

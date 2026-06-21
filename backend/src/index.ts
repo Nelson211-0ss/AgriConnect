@@ -18,6 +18,7 @@ import marketplaceRoutes from './routes/marketplace';
 import produceRoutes from './routes/produce';
 import financialRoutes from './routes/financial';
 import messagingRoutes from './routes/messaging';
+import notificationsRoutes from './routes/notifications';
 import trainingRoutes from './routes/training';
 import reportsRoutes from './routes/reports';
 
@@ -55,6 +56,7 @@ app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/produce', produceRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/messaging', messagingRoutes);
+app.use('/api/notifications', notificationsRoutes);
 app.use('/api/training', trainingRoutes);
 app.use('/api/reports', reportsRoutes);
 

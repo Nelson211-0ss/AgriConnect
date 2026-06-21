@@ -23,10 +23,10 @@ interface QuickLink {
 }
 
 const FARMER_LINKS: QuickLink[] = [
-  { to: '/app/marketplace', label: 'Marketplace', icon: Store, highlight: true },
+  { to: '/app/weather', label: 'Weather', icon: CloudSun, highlight: true },
+  { to: '/app/marketplace', label: 'Marketplace', icon: Store },
   { to: '/app/market', label: 'Market Prices', icon: LineChart },
   { to: '/app/advisories', label: 'Advisories', icon: BookOpen },
-  { to: '/app/weather', label: 'Weather', icon: CloudSun },
   { to: '/app/pests', label: 'Pest Alerts', icon: Bug },
   { to: '/app/financial', label: 'Finance', icon: Wallet },
   { to: '/app/training', label: 'Training', icon: GraduationCap },
@@ -52,7 +52,7 @@ export function RoleWelcome() {
   const firstName = user.name.split(' ')[0];
 
   return (
-    <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-soft dark:border-slate-700 dark:bg-slate-900 md:p-6">
+    <section className="mb-6 rounded-2xl border border-line bg-surface p-5 shadow-soft dark:border-line dark:bg-surface-elevated md:hidden">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <UserAvatar name={user.name} avatarUrl={user.avatar_url} size="xl" />
@@ -61,7 +61,7 @@ export function RoleWelcome() {
             <h2 className="text-2xl font-bold text-ink dark:text-white">
               Hello, {roleLabel} {firstName}
             </h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm text-content-muted">
               {user.role === 'farmer'
                 ? 'Browse market prices, sell produce, and stay ahead of weather and pest alerts.'
                 : 'Find farmer produce, post buying demand, and track market prices.'}
@@ -71,7 +71,7 @@ export function RoleWelcome() {
       </div>
 
       <div className="mt-5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Quick access</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-content-faint">Quick access</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
           {links.map((link) => (
             <Link
@@ -81,7 +81,7 @@ export function RoleWelcome() {
                 'flex flex-col items-center gap-2 rounded-xl border px-3 py-3 text-center text-xs font-medium transition',
                 link.highlight
                   ? 'border-forest bg-forest text-white hover:bg-forest-700 dark:border-leaf dark:bg-leaf dark:text-forest-800'
-                  : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-forest hover:text-forest dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-leaf dark:hover:text-leaf'
+                  : 'border-line bg-surface-muted text-content hover:border-forest hover:text-forest dark:border-line dark:bg-slate-800 dark:text-slate-300 dark:hover:border-leaf dark:hover:text-leaf'
               )}
             >
               <link.icon size={18} />

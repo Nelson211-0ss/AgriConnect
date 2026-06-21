@@ -5,14 +5,18 @@ import { asyncHandler, authenticate, authorize, AuthedRequest } from '../utils';
 const router = Router();
 router.use(authenticate);
 
-// List produce posted by farmers (visible to all, especially buyers)
+// Farmers see only their listings; buyers and other roles see all farmer produce
 router.get(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: AuthedRequest, res) => {
     const commodity = String(req.query.commodity || '').trim();
     const county = String(req.query.county || '').trim();
     const params: unknown[] = [];
     const where: string[] = [];
+    if (req.user?.role === 'farmer') {
+      params.push(req.user.id);
+      where.push(`farmer_id=$${params.length}`);
+    }
     if (commodity) {
       params.push(commodity);
       where.push(`commodity=$${params.length}`);

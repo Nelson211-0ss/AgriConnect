@@ -6,10 +6,30 @@
 
 :root {
   color-scheme: light;
+  --surface: 255 255 255;
+  --surface-muted: 248 250 252;
+  --surface-elevated: 255 255 255;
+  --line: 226 232 240;
+  --line-subtle: 241 245 249;
+  --content: 30 41 59;
+  --content-muted: 100 116 139;
+  --content-faint: 148 163 184;
+  --scrollbar: 203 213 225;
+  --scrollbar-hover: 148 163 184;
 }
 
 html.dark {
   color-scheme: dark;
+  --surface: 15 23 42;
+  --surface-muted: 2 6 23;
+  --surface-elevated: 30 41 59;
+  --line: 51 65 85;
+  --line-subtle: 30 41 59;
+  --content: 241 245 249;
+  --content-muted: 148 163 184;
+  --content-faint: 100 116 139;
+  --scrollbar: 51 65 85;
+  --scrollbar-hover: 71 85 105;
 }
 
 html,
@@ -19,7 +39,7 @@ body,
 }
 
 body {
-  @apply bg-mist text-ink antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-mist text-ink antialiased;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
@@ -28,14 +48,80 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgb(var(--scrollbar));
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgb(var(--scrollbar-hover));
 }
 
 .leaflet-container {
   font-family: inherit;
   border-radius: 6px;
+}
+
+@layer utilities {
+  html.dark .bg-white {
+    background-color: rgb(var(--surface-elevated));
+  }
+
+  html.dark .bg-slate-50,
+  html.dark .bg-slate-50\/50 {
+    background-color: rgb(var(--surface-elevated) / 0.5);
+  }
+
+  html.dark .border-slate-100,
+  html.dark .border-slate-200 {
+    border-color: rgb(var(--line));
+  }
+
+  html.dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgb(var(--line-subtle));
+  }
+
+  html.dark .hover\:bg-slate-50:hover,
+  html.dark .hover\:bg-slate-50\/50:hover {
+    background-color: rgb(var(--surface-elevated) / 0.6);
+  }
+
+  html.dark .hover\:bg-slate-100:hover {
+    background-color: rgb(var(--surface-elevated));
+  }
+
+  html.dark .shadow-soft {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  html.dark .shadow-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  html.dark .text-slate-400 {
+    color: rgb(var(--content-faint));
+  }
+
+  html.dark .text-slate-500,
+  html.dark .text-slate-600 {
+    color: rgb(var(--content-muted));
+  }
+
+  html.dark .text-slate-700 {
+    color: rgb(var(--content));
+  }
+
+  html.dark .bg-red-50 {
+    background-color: rgb(239 68 68 / 0.1);
+  }
+
+  html.dark .bg-forest-50 {
+    background-color: rgb(11 122 62 / 0.15);
+  }
+
+  html.dark .border-forest-100 {
+    border-color: rgb(11 122 62 / 0.3);
+  }
+
+  html.dark .text-forest-800 {
+    color: rgb(74 222 128);
+  }
 }

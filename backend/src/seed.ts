@@ -367,6 +367,56 @@ export async function seed(force = false) {
     await query('UPDATE training_courses SET enrolled=(SELECT count(*) FROM training_enrollments WHERE course_id=$1) WHERE id=$1', [id]);
   }
 
+  // Demo in-app notifications for farmer account (visible on login)
+  console.log('[seed] inserting farmer notifications ...');
+  const demoFarmerUser = await query<{ id: number; phone: string | null; county: string | null }>(
+    "SELECT id, phone, county FROM users WHERE email='farmer@corwado.org'"
+  );
+  if (demoFarmerUser.rows[0]) {
+    const farmerUser = demoFarmerUser.rows[0];
+    const { rows: existing } = await query<{ c: string }>(
+      'SELECT count(*)::text c FROM notifications WHERE user_id=$1',
+      [farmerUser.id]
+    );
+    if (parseInt(existing[0]?.c || '0', 10) === 0) {
+      const county = farmerUser.county || 'Juba';
+      const samples = [
+        {
+          type: 'weather',
+          title: `Heavy Rain — ${county}`,
+          message: 'Heavy rains expected in your county. Secure stored produce and clear drainage channels.',
+          severity: 'high',
+          county,
+          link: '/app/weather',
+        },
+        {
+          type: 'pest',
+          title: 'Pest alert: Fall Armyworm',
+          message: `Fall Armyworm activity reported in ${county} County. Scout maize fields early morning.`,
+          severity: 'high',
+          county,
+          link: '/app/pests',
+        },
+        {
+          type: 'advisory',
+          title: 'New advisory: Conservation tillage',
+          message: 'New climate-smart advisory published. Learn drought-resilient tillage practices.',
+          severity: 'moderate',
+          county: null,
+          link: '/app/advisories',
+        },
+      ];
+      const hasPhone = Boolean(farmerUser.phone?.trim());
+      for (const s of samples) {
+        await query(
+          `INSERT INTO notifications(user_id, type, title, message, severity, county, link, sms_sent, whatsapp_sent, created_at)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+          [farmerUser.id, s.type, s.title, s.message, s.severity, s.county, s.link, hasPhone, hasPhone, daysAgo(rand(0, 3))]
+        );
+      }
+    }
+  }
+
   // Activity log
   await query(
     `INSERT INTO activity_log(type,description,created_at)

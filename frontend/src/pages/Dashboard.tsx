@@ -21,6 +21,7 @@ import { api } from '@/lib/api';
 import { Card, CardHeader, CardBody, Badge, Table, Th, Td, Spinner, severityTone } from '@/components/ui';
 import { StatCard, CHART_COLORS } from '@/components/common';
 import { formatNumber, SSP, timeAgo } from '@/lib/utils';
+import { useChartTheme } from '@/lib/chartTheme';
 
 interface DashboardData {
   cards: {
@@ -49,12 +50,13 @@ interface DashboardData {
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState('');
+  const chart = useChartTheme();
 
   useEffect(() => {
     api.get<DashboardData>('/dashboard').then(setData).catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-600">{error}</div>;
+  if (error) return <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">{error}</div>;
   if (!data)
     return (
       <div className="flex h-96 items-center justify-center">
@@ -93,8 +95,8 @@ export default function Dashboard() {
                     <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => formatNumber(v)} />
-                <Legend iconType="circle" />
+                <Tooltip formatter={(v: number) => formatNumber(v)} contentStyle={chart.tooltip.contentStyle} />
+                <Legend iconType="circle" wrapperStyle={{ color: chart.legend }} />
               </PieChart>
             </ResponsiveContainer>
           </CardBody>
@@ -105,11 +107,11 @@ export default function Dashboard() {
           <CardBody>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={data.charts.messageActivity}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip />
-                <Legend iconType="circle" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: chart.tick }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: chart.tick }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={chart.tooltip.contentStyle} />
+                <Legend iconType="circle" wrapperStyle={{ color: chart.legend }} />
                 <Line type="monotone" dataKey="sms" stroke="#0B7A3E" strokeWidth={3} dot={false} name="SMS" />
                 <Line type="monotone" dataKey="whatsapp" stroke="#22C55E" strokeWidth={3} dot={false} name="WhatsApp" />
               </LineChart>
@@ -125,10 +127,10 @@ export default function Dashboard() {
           <CardBody>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={data.charts.cropDistribution} layout="vertical" margin={{ left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v: number) => formatNumber(v)} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 12, fill: chart.tick }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12, fill: chart.tickStrong }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(v: number) => formatNumber(v)} contentStyle={chart.tooltip.contentStyle} />
                 <Bar dataKey="value" fill="#22C55E" radius={[0, 6, 6, 0]} name="Farmers" />
               </BarChart>
             </ResponsiveContainer>
@@ -146,10 +148,10 @@ export default function Dashboard() {
                     <stop offset="100%" stopColor="#0B7A3E" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: chart.tick }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: chart.tick }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={chart.tooltip.contentStyle} />
                 <Area type="monotone" dataKey="farmers" stroke="#0B7A3E" strokeWidth={2.5} fill="url(#g)" name="Farmers" />
               </AreaChart>
             </ResponsiveContainer>
@@ -168,7 +170,7 @@ export default function Dashboard() {
                       <span className="text-slate-600">{t.name}</span>
                       <span className="font-semibold text-ink">{t.value}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100">
+                    <div className="h-2 rounded-full bg-surface-muted dark:bg-slate-800">
                       <div
                         className="h-2 rounded-full"
                         style={{ width: `${(t.value / max) * 100}%`, background: CHART_COLORS[i % CHART_COLORS.length] }}

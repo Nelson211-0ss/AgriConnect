@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Loader2, KeyRound } from 'lucide-react';
 import { useAuth, Role } from '@/context/AuthContext';
 import { Button, Input, Select } from '@/components/ui';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { DEFAULT_PASSWORD, homeRoute } from '@/lib/constants';
 
 export default function Register() {
@@ -29,17 +30,20 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-mist px-6 py-10">
+    <div className="relative flex min-h-screen items-center justify-center bg-mist px-6 py-10">
+      <div className="absolute right-6 top-6">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2 text-forest">
           <Leaf size={28} />
           <span className="text-xl font-bold">CORWADO AgriConnect</span>
         </div>
-        <div className="rounded-md bg-white p-8 shadow-card">
+        <div className="rounded-md border border-line-subtle bg-surface p-8 shadow-card dark:border-line dark:bg-surface-elevated">
           <h2 className="text-2xl font-bold text-ink">Create your account</h2>
-          <p className="mt-1 text-sm text-slate-500">Join as a farmer or buyer — Super Admin can also create accounts for you</p>
+          <p className="mt-1 text-sm text-content-muted">Join as a farmer or buyer — Super Admin can also create accounts for you</p>
 
-          <div className="mt-4 flex items-start gap-2 rounded-md border border-forest-100 bg-forest-50 px-3 py-2.5 text-sm text-forest-800">
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-forest-100 bg-forest-50 px-3 py-2.5 text-sm text-forest-800 dark:border-forest/30 dark:bg-forest/15 dark:text-leaf">
             <KeyRound size={16} className="mt-0.5 shrink-0" />
             <span>
               Your login password will be: <strong className="font-mono">{DEFAULT_PASSWORD}</strong>

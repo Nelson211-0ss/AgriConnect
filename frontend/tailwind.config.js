@@ -21,8 +21,22 @@ export default {
           DEFAULT: '#F59E0B',
           light: '#FBBF24',
         },
-        ink: '#1E293B',
-        mist: '#F8FAFC',
+        ink: 'rgb(var(--content) / <alpha-value>)',
+        mist: 'rgb(var(--surface-muted) / <alpha-value>)',
+        surface: {
+          DEFAULT: 'rgb(var(--surface) / <alpha-value>)',
+          muted: 'rgb(var(--surface-muted) / <alpha-value>)',
+          elevated: 'rgb(var(--surface-elevated) / <alpha-value>)',
+        },
+        line: {
+          DEFAULT: 'rgb(var(--line) / <alpha-value>)',
+          subtle: 'rgb(var(--line-subtle) / <alpha-value>)',
+        },
+        content: {
+          DEFAULT: 'rgb(var(--content) / <alpha-value>)',
+          muted: 'rgb(var(--content-muted) / <alpha-value>)',
+          faint: 'rgb(var(--content-faint) / <alpha-value>)',
+        },
       },
       fontFamily: {
         display: ['PT Sans', 'sans-serif'],

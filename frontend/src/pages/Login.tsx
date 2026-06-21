@@ -4,6 +4,7 @@ import { Leaf, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button, Input } from '@/components/ui';
 import { DEFAULT_PASSWORD, homeRoute } from '@/lib/constants';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { LoginFarmerSlider, LOGIN_SLIDES } from '@/components/LoginFarmerSlider';
 
 const DEMO = [
@@ -82,7 +83,10 @@ export default function Login() {
       </div>
 
       {/* Right form */}
-      <div className="flex w-full items-center justify-center bg-mist px-6 lg:w-1/2">
+      <div className="relative flex w-full items-center justify-center bg-mist px-6 lg:w-1/2">
+        <div className="absolute right-6 top-6">
+          <ThemeToggle />
+        </div>
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
             <div className="flex items-center gap-2 text-forest">
@@ -96,7 +100,7 @@ export default function Login() {
           <form onSubmit={submit} className="mt-6 space-y-4">
             <Input label="Email address" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             <Input label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            {error && <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
+            {error && <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-300">{error}</div>}
             <Button type="submit" size="lg" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" size={18} /> : 'Sign in'}
             </Button>
@@ -112,7 +116,7 @@ export default function Login() {
                     setEmail(d.email);
                     setPassword(DEFAULT_PASSWORD);
                   }}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-forest hover:text-forest"
+                  className="rounded-xl border border-line bg-surface px-3 py-2 text-sm font-medium text-content-muted transition hover:border-forest hover:text-forest dark:border-line dark:bg-surface-elevated"
                 >
                   {d.label}
                 </button>

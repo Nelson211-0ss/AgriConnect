@@ -17,7 +17,7 @@ Built as an MVP prototype suitable for presentation to **CORWADO South Sudan, th
 | **Extension Workers** | Officer directory, farmers-registered counts, admin CRUD |
 | **Advisories** | 6 categories, create / publish / schedule, card gallery, reader view |
 | **Market Information** | Live prices, weekly price-trend chart, search, add prices |
-| **Weather Intelligence** | Per-county current weather, 7-day forecast charts, early-warning alerts (mock API) |
+| **Weather Intelligence** | Per-county live weather (Open-Meteo), 7-day forecast with real dates, early-warning alerts |
 | **Pest & Disease Alerts** | County-based outbreak reporting, severity, **interactive Leaflet map** |
 | **Buyer Marketplace** | Buyers post demand, farmers submit interest |
 | **Financial Services** | Loans, savings & insurance product catalogue |

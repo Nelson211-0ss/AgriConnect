@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Plus, MapPin, Phone, Package, Trash2, HandHeart, Sprout, ShoppingCart, ImagePlus, Loader2, X } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
@@ -40,6 +40,15 @@ interface ProduceListing {
 
 const COMMODITIES = ['Maize', 'Sorghum', 'Groundnuts', 'Sesame', 'Cassava'];
 const COUNTIES = ['Juba', 'Wau', 'Aweil', 'Bor', 'Rumbek'];
+const QUANTITY_OPTIONS = [25, 50, 100, 250, 500, 1000, 2000, 5000];
+
+function buildCommodityCounts<T extends { commodity: string }>(rows: T[]) {
+  const counts: Record<string, number> = { '': rows.length };
+  COMMODITIES.forEach((c) => {
+    counts[c] = rows.filter((r) => r.commodity === c).length;
+  });
+  return counts;
+}
 
 const COMMODITY_IMAGE: Record<string, string> = {
   Maize: '/produce/maize.jpg',
@@ -60,21 +69,39 @@ export default function Marketplace() {
 
   const [tab, setTab] = useState<'produce' | 'demand'>(isBuyer ? 'demand' : 'produce');
   const [filter, setFilter] = useState('');
+  const [listingCounts, setListingCounts] = useState<Record<string, number>>({});
+
+  const refreshCounts = useCallback(() => {
+    const endpoint = tab === 'produce' ? '/produce' : '/marketplace';
+    api
+      .get<{ commodity: string }[]>(endpoint)
+      .then((rows) => setListingCounts(buildCommodityCounts(rows)))
+      .catch(() => setListingCounts({}));
+  }, [tab]);
+
+  useEffect(() => {
+    refreshCounts();
+  }, [refreshCounts]);
 
   return (
     <div className="animate-fade-in">
       {showWelcome ? (
-        <RoleWelcome />
+        <>
+          <RoleWelcome />
+          <div className="hidden md:block">
+            <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+          </div>
+        </>
       ) : (
         <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
       )}
 
       {showWelcome && (
-        <h3 className="mb-4 text-lg font-semibold text-ink dark:text-white">Marketplace</h3>
+        <h3 className="mb-4 text-lg font-semibold text-ink dark:text-white md:hidden">Marketplace</h3>
       )}
 
       {/* Tab switcher */}
-      <div className="mb-5 inline-flex rounded-md border border-slate-200 bg-white p-1">
+      <div className="mb-5 inline-flex rounded-md border border-line bg-surface p-1 dark:border-line dark:bg-surface-elevated">
         <button
           onClick={() => {
             setTab('produce');
@@ -82,10 +109,13 @@ export default function Marketplace() {
           }}
           className={cn(
             'flex items-center gap-2 rounded px-4 py-2 text-sm font-medium transition',
-            tab === 'produce' ? 'bg-forest text-white' : 'text-slate-600 hover:text-forest'
+            tab === 'produce' ? 'bg-forest text-white' : 'text-content-muted hover:text-forest'
           )}
         >
           <Sprout size={16} /> Farmer Produce
+          {tab === 'produce' && listingCounts[''] != null && (
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{listingCounts['']}</span>
+          )}
         </button>
         <button
           onClick={() => {
@@ -94,36 +124,36 @@ export default function Marketplace() {
           }}
           className={cn(
             'flex items-center gap-2 rounded px-4 py-2 text-sm font-medium transition',
-            tab === 'demand' ? 'bg-forest text-white' : 'text-slate-600 hover:text-forest'
+            tab === 'demand' ? 'bg-forest text-white' : 'text-content-muted hover:text-forest'
           )}
         >
           <ShoppingCart size={16} /> Buyer Demand
+          {tab === 'demand' && listingCounts[''] != null && (
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{listingCounts['']}</span>
+          )}
         </button>
       </div>
 
       {/* Commodity filter */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        <button
-          onClick={() => setFilter('')}
-          className={cn('rounded-md border px-4 py-2 text-sm font-medium', !filter ? 'border-forest bg-forest text-white' : 'border-slate-200 bg-white text-slate-600')}
+      <div className="mb-4 max-w-sm">
+        <Select
+          label={tab === 'produce' ? 'Filter produce' : 'Filter demand'}
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
         >
-          All
-        </button>
-        {COMMODITIES.map((c) => (
-          <button
-            key={c}
-            onClick={() => setFilter(c)}
-            className={cn('rounded-md border px-4 py-2 text-sm font-medium', filter === c ? 'border-forest bg-forest text-white' : 'border-slate-200 bg-white text-slate-600')}
-          >
-            {c}
-          </button>
-        ))}
+          <option value="">All ({listingCounts[''] ?? 0})</option>
+          {COMMODITIES.map((c) => (
+            <option key={c} value={c}>
+              {c} ({listingCounts[c] ?? 0})
+            </option>
+          ))}
+        </Select>
       </div>
 
       {tab === 'produce' ? (
-        <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} />
+        <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} onUpdated={refreshCounts} />
       ) : (
-        <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} />
+        <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} onUpdated={refreshCounts} />
       )}
     </div>
   );
@@ -131,7 +161,19 @@ export default function Marketplace() {
 
 /* ----------------------------- Farmer Produce ----------------------------- */
 
-function ProduceTab({ filter, canPost, canBuy, canDelete }: { filter: string; canPost: boolean; canBuy: boolean; canDelete: boolean }) {
+function ProduceTab({
+  filter,
+  canPost,
+  canBuy,
+  canDelete,
+  onUpdated,
+}: {
+  filter: string;
+  canPost: boolean;
+  canBuy: boolean;
+  canDelete: boolean;
+  onUpdated?: () => void;
+}) {
   const [rows, setRows] = useState<ProduceListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -141,7 +183,10 @@ function ProduceTab({ filter, canPost, canBuy, canDelete }: { filter: string; ca
     api
       .get<ProduceListing[]>(`/produce${filter ? `?commodity=${filter}` : ''}`)
       .then(setRows)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        onUpdated?.();
+      });
   };
   useEffect(load, [filter]);
 
@@ -174,11 +219,11 @@ function ProduceTab({ filter, canPost, canBuy, canDelete }: { filter: string; ca
           <EmptyState title="No produce listed yet" hint="Farmers can post produce with photos for buyers to browse." />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((l) => (
             <Card key={l.id} className="flex flex-col overflow-hidden transition hover:shadow-card">
               {/* Photo */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-muted dark:bg-slate-800">
                 <img src={produceImage(l)} alt={l.commodity} className="h-full w-full object-cover" loading="lazy" />
                 <div className="absolute left-3 top-3">
                   <Badge tone={l.status === 'available' ? 'green' : 'gray'} className="shadow-sm">
@@ -200,7 +245,7 @@ function ProduceTab({ filter, canPost, canBuy, canDelete }: { filter: string; ca
               </div>
 
               <CardBody className="flex flex-1 flex-col pt-4">
-                {l.description && <p className="line-clamp-2 text-sm text-slate-600">{l.description}</p>}
+                {l.description && <p className="line-clamp-2 text-sm text-content-muted">{l.description}</p>}
                 <div className="mt-3 space-y-1.5 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Quantity</span>
@@ -214,7 +259,7 @@ function ProduceTab({ filter, canPost, canBuy, canDelete }: { filter: string; ca
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                <div className="mt-4 flex items-center justify-between border-t border-line-subtle pt-3 dark:border-line">
                   <span className="text-xs text-slate-400">{l.interests} interested · {timeAgo(l.created_at)}</span>
                   <div className="flex items-center gap-1">
                     {canBuy && l.status === 'available' && (
@@ -251,7 +296,7 @@ function ProduceTab({ filter, canPost, canBuy, canDelete }: { filter: string; ca
 function ProduceFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
     commodity: 'Maize',
-    quantity: '',
+    quantity: '100',
     price: '',
     county: 'Juba',
     location: '',
@@ -303,9 +348,9 @@ function ProduceFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
       <div className="space-y-4">
         {/* Photo uploader */}
         <div>
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Produce Photo</span>
+          <span className="mb-1.5 block text-sm font-medium text-content">Produce Photo</span>
           <div className="flex gap-4">
-            <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+            <div className="relative h-28 w-36 shrink-0 overflow-hidden rounded-md border border-line bg-surface-muted dark:border-line dark:bg-slate-800">
               <img src={shownImage} alt="preview" className="h-full w-full object-cover" />
               {preview && (
                 <button
@@ -326,7 +371,7 @@ function ProduceFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
                 {processing ? <Loader2 className="animate-spin" size={14} /> : <ImagePlus size={14} />}
                 {processing ? 'Processing...' : 'Upload Photo'}
               </Button>
-              <p className="text-xs text-slate-400">A clear photo helps buyers. If none is uploaded, a default {form.commodity} photo is shown.</p>
+              <p className="text-xs text-content-faint">A clear photo helps buyers. If none is uploaded, a default {form.commodity} photo is shown.</p>
             </div>
           </div>
         </div>
@@ -337,7 +382,14 @@ function ProduceFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
               <option key={c}>{c}</option>
             ))}
           </Select>
-          <Input label="Quantity (kg)" type="number" value={form.quantity} onChange={(e) => set('quantity', e.target.value)} />
+          <Select label="Quantity (kg)" value={form.quantity} onChange={(e) => set('quantity', e.target.value)}>
+            <option value="">Select amount</option>
+            {QUANTITY_OPTIONS.map((q) => (
+              <option key={q} value={String(q)}>
+                {formatNumber(q)} kg
+              </option>
+            ))}
+          </Select>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Input label="Asking Price (SSP/kg)" type="number" value={form.price} onChange={(e) => set('price', e.target.value)} />
@@ -351,12 +403,12 @@ function ProduceFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
         <Input label="Contact Information" value={form.contact_info} onChange={(e) => set('contact_info', e.target.value)} placeholder="+211 ..." />
         <Textarea label="Description" rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Describe quality, drying, packaging..." />
 
-        {error && <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
+        {error && <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-300">{error}</div>}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={save} disabled={saving || processing}>
+          <Button onClick={save} disabled={saving || processing || !form.quantity}>
             {saving ? <Spinner className="h-4 w-4 border-white/40 border-t-white" /> : 'Post Produce'}
           </Button>
         </div>
@@ -367,25 +419,40 @@ function ProduceFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: 
 
 /* ----------------------------- Buyer Demand ----------------------------- */
 
-function DemandTab({ filter, canPost, canShowInterest, canDelete }: { filter: string; canPost: boolean; canShowInterest: boolean; canDelete: boolean }) {
+function DemandTab({
+  filter,
+  canPost,
+  canShowInterest,
+  canDelete,
+  onUpdated,
+}: {
+  filter: string;
+  canPost: boolean;
+  canShowInterest: boolean;
+  canDelete: boolean;
+  onUpdated?: () => void;
+}) {
   const [rows, setRows] = useState<DemandListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ commodity: 'Maize', quantity: '', price: '', delivery_location: '', contact_info: '' });
+  const [form, setForm] = useState({ commodity: 'Maize', quantity: '100', price: '', delivery_location: '', contact_info: '' });
 
   const load = () => {
     setLoading(true);
     api
       .get<DemandListing[]>(`/marketplace${filter ? `?commodity=${filter}` : ''}`)
       .then(setRows)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        onUpdated?.();
+      });
   };
   useEffect(load, [filter]);
 
   const save = async () => {
     await api.post('/marketplace', form);
     setOpen(false);
-    setForm({ commodity: 'Maize', quantity: '', price: '', delivery_location: '', contact_info: '' });
+    setForm({ commodity: 'Maize', quantity: '100', price: '', delivery_location: '', contact_info: '' });
     load();
   };
   const expressInterest = async (id: number) => {
@@ -417,7 +484,7 @@ function DemandTab({ filter, canPost, canShowInterest, canDelete }: { filter: st
           <EmptyState title="No demand posted yet" hint="Buyers can post buying opportunities here." />
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((l) => (
             <Card key={l.id} className="flex flex-col transition hover:shadow-card">
               <CardBody className="flex flex-1 flex-col pt-5">
@@ -447,7 +514,7 @@ function DemandTab({ filter, canPost, canShowInterest, canDelete }: { filter: st
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                <div className="mt-4 flex items-center justify-between border-t border-line-subtle pt-3 dark:border-line">
                   <span className="text-xs text-slate-400">{l.interests} interested · {timeAgo(l.created_at)}</span>
                   <div className="flex items-center gap-1">
                     {canShowInterest && (
@@ -476,7 +543,14 @@ function DemandTab({ filter, canPost, canShowInterest, canDelete }: { filter: st
                 <option key={c}>{c}</option>
               ))}
             </Select>
-            <Input label="Quantity (kg)" type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+            <Select label="Quantity (kg)" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })}>
+              <option value="">Select amount</option>
+              {QUANTITY_OPTIONS.map((q) => (
+                <option key={q} value={String(q)}>
+                  {formatNumber(q)} kg
+                </option>
+              ))}
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Offer Price (SSP/kg)" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
@@ -487,7 +561,9 @@ function DemandTab({ filter, canPost, canShowInterest, canDelete }: { filter: st
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={save}>Post Demand</Button>
+            <Button onClick={save} disabled={!form.quantity}>
+              Post Demand
+            </Button>
           </div>
         </div>
       </Modal>

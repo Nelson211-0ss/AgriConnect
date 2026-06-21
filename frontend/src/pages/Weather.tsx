@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { Plus, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, CloudLightning, AlertTriangle } from 'lucide-react';
+import { Plus, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, CloudLightning, AlertTriangle, RefreshCw } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Button, Card, CardHeader, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, severityTone } from '@/components/ui';
+import { Button, Card, CardHeader, CardBody, Select, Textarea, Modal, Badge, Spinner, severityTone } from '@/components/ui';
 import { PageHeader } from '@/components/common';
 import { useAuth } from '@/context/AuthContext';
-import { formatDate, cn } from '@/lib/utils';
+import { FarmerAlertsBanner } from '@/components/NotificationBell';
+import { useChartTheme } from '@/lib/chartTheme';
+import { formatDate, timeAgo, cn } from '@/lib/utils';
 
 interface Current {
   county: string;
@@ -14,9 +16,12 @@ interface Current {
   rainfall: number;
   windSpeed: number;
   condition: string;
+  observedAt: string;
+  forecast: Forecast[];
 }
 interface Forecast {
   day: string;
+  date: string;
   temp: number;
   tempMin: number;
   rainfall: number;
@@ -32,6 +37,13 @@ interface Alert {
   created_at: string;
 }
 
+interface WeatherData {
+  current: Current[];
+  alerts: Alert[];
+  fetchedAt: string;
+  source: string;
+}
+
 const condIcon = (c: string) => {
   if (/thunder/i.test(c)) return CloudLightning;
   if (/heavy rain/i.test(c)) return CloudRain;
@@ -45,23 +57,41 @@ const COUNTIES = ['Juba', 'Wau', 'Aweil', 'Bor', 'Rumbek'];
 
 function Metric({ icon, val, label }: { icon: React.ReactNode; val: string; label: string }) {
   return (
-    <div className="rounded-xl bg-mist p-3">
+    <div className="rounded-xl bg-mist p-3 dark:bg-slate-800">
       {icon}
       <div className="mt-1 font-semibold text-ink">{val}</div>
-      <div className="text-xs text-slate-400">{label}</div>
+      <div className="text-xs text-content-faint">{label}</div>
     </div>
   );
 }
 
 export default function Weather() {
   const { user } = useAuth();
+  const chart = useChartTheme();
   const canEdit = user?.role === 'super_admin' || user?.role === 'extension_officer';
-  const [data, setData] = useState<{ current: Current[]; forecast: Forecast[]; alerts: Alert[] } | null>(null);
+  const [data, setData] = useState<WeatherData | null>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({ type: 'Heavy Rain', county: 'Juba', severity: 'high', message: '' });
 
-  const load = () => api.get<{ current: Current[]; forecast: Forecast[]; alerts: Alert[] }>('/weather').then(setData);
+  const load = async (showSpinner = false) => {
+    if (showSpinner) setRefreshing(true);
+    else setLoading(true);
+    setError('');
+    try {
+      const result = await api.get<WeatherData>('/weather');
+      setData(result);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     load();
   }, []);
@@ -70,30 +100,66 @@ export default function Weather() {
     await api.post('/weather/alerts', form);
     setOpen(false);
     setForm({ type: 'Heavy Rain', county: 'Juba', severity: 'high', message: '' });
-    load();
+    load(true);
   };
 
-  if (!data)
+  if (loading && !data) {
     return (
       <div className="flex h-96 items-center justify-center">
         <Spinner className="h-8 w-8" />
       </div>
     );
+  }
+
+  if (error && !data) {
+    return (
+      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+        {error}
+        <Button className="mt-3" size="sm" onClick={() => load()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   const cur = data.current[selected];
+  const forecast = cur.forecast ?? [];
   const CondIcon = condIcon(cur.condition);
+  const observedLabel = cur.observedAt
+    ? new Date(cur.observedAt).toLocaleString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
 
   return (
     <div className="animate-fade-in space-y-4">
+      {user?.role === 'farmer' && <FarmerAlertsBanner />}
+
       <PageHeader
         title="Weather Intelligence"
-        subtitle="Localized forecasts and early warning alerts"
+        subtitle={
+          data.fetchedAt
+            ? `Live data from Open-Meteo · Updated ${timeAgo(data.fetchedAt)}`
+            : 'Localized forecasts and early warning alerts'
+        }
         actions={
-          canEdit && (
-            <Button onClick={() => setOpen(true)}>
-              <Plus size={16} /> Issue Alert
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => load(true)} disabled={refreshing}>
+              {refreshing ? <Spinner className="h-4 w-4" /> : <RefreshCw size={16} />}
+              Refresh
             </Button>
-          )
+            {canEdit && (
+              <Button onClick={() => setOpen(true)}>
+                <Plus size={16} /> Issue Alert
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -105,7 +171,9 @@ export default function Weather() {
             onClick={() => setSelected(i)}
             className={cn(
               'rounded-xl border px-4 py-2 text-sm font-medium',
-              selected === i ? 'border-forest bg-forest text-white' : 'border-slate-200 bg-white text-slate-600'
+              selected === i
+                ? 'border-forest bg-forest text-white'
+                : 'border-line bg-surface text-content-muted dark:border-line dark:bg-surface-elevated'
             )}
           >
             {c.county}
@@ -115,13 +183,14 @@ export default function Weather() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Current weather hero */}
-        <Card className="overflow-hidden lg:col-span-1" >
+        <Card className="overflow-hidden lg:col-span-1">
           <div className="p-6 text-white" style={{ background: 'linear-gradient(150deg,#0B7A3E,#064a25)' }}>
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm opacity-80">{cur.county} County</div>
                 <div className="text-5xl font-bold">{cur.temperature}°C</div>
                 <div className="mt-1 text-sm opacity-90">{cur.condition}</div>
+                {observedLabel && <div className="mt-2 text-xs opacity-75">Observed {observedLabel}</div>}
               </div>
               <CondIcon size={64} className="opacity-90" />
             </div>
@@ -131,36 +200,36 @@ export default function Weather() {
               <Metric icon={<Thermometer size={20} className="mx-auto text-accent" />} val={`${cur.temperature}°`} label="Temp" />
               <Metric icon={<Droplets size={20} className="mx-auto text-forest" />} val={`${cur.humidity}%`} label="Humidity" />
               <Metric icon={<CloudRain size={20} className="mx-auto text-blue-500" />} val={`${cur.rainfall}mm`} label="Rainfall" />
-              <Metric icon={<Wind size={20} className="mx-auto text-slate-500" />} val={`${cur.windSpeed}`} label="km/h" />
+              <Metric icon={<Wind size={20} className="mx-auto text-content-muted" />} val={`${cur.windSpeed}`} label="km/h" />
             </div>
           </CardBody>
         </Card>
 
         {/* Forecast charts */}
         <Card className="lg:col-span-2">
-          <CardHeader title="7-Day Forecast" subtitle={`Temperature & rainfall outlook for ${cur.county}`} />
+          <CardHeader title="7-Day Forecast" subtitle={`Real dates & outlook for ${cur.county} County`} />
           <CardBody>
             <ResponsiveContainer width="100%" height={140}>
-              <AreaChart data={data.forecast}>
+              <AreaChart data={forecast}>
                 <defs>
                   <linearGradient id="temp" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.4} />
                     <stop offset="100%" stopColor="#F59E0B" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} unit="°" />
-                <Tooltip />
-                <Area type="monotone" dataKey="temp" stroke="#F59E0B" strokeWidth={2.5} fill="url(#temp)" name="Temp °C" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: chart.tick }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
+                <YAxis tick={{ fontSize: 11, fill: chart.tick }} axisLine={false} tickLine={false} unit="°" />
+                <Tooltip contentStyle={chart.tooltip.contentStyle} />
+                <Area type="monotone" dataKey="temp" stroke="#F59E0B" strokeWidth={2.5} fill="url(#temp)" name="High °C" />
               </AreaChart>
             </ResponsiveContainer>
             <ResponsiveContainer width="100%" height={120}>
-              <BarChart data={data.forecast}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} unit="mm" />
-                <Tooltip />
+              <BarChart data={forecast}>
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: chart.tick }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
+                <YAxis tick={{ fontSize: 11, fill: chart.tick }} axisLine={false} tickLine={false} unit="mm" />
+                <Tooltip contentStyle={chart.tooltip.contentStyle} />
                 <Bar dataKey="rainfall" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Rainfall mm" />
               </BarChart>
             </ResponsiveContainer>
@@ -172,10 +241,15 @@ export default function Weather() {
       <Card>
         <CardHeader title="Active Weather Alerts" subtitle="Early warnings issued to farmers" />
         <CardBody className="space-y-3">
-          {data.alerts.length === 0 && <p className="text-sm text-slate-400">No active alerts.</p>}
+          {data.alerts.length === 0 && <p className="text-sm text-content-faint">No active alerts.</p>}
           {data.alerts.map((a) => (
-            <div key={a.id} className="flex items-start gap-3 rounded-xl border border-slate-100 bg-mist p-4">
-              <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', a.severity === 'critical' || a.severity === 'high' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600')}>
+            <div key={a.id} className="flex items-start gap-3 rounded-xl border border-line-subtle bg-mist p-4 dark:border-line">
+              <div
+                className={cn(
+                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                  a.severity === 'critical' || a.severity === 'high' ? 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300' : 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300'
+                )}
+              >
                 <AlertTriangle size={20} />
               </div>
               <div className="flex-1">
@@ -184,8 +258,8 @@ export default function Weather() {
                   <Badge tone={severityTone(a.severity)}>{a.severity}</Badge>
                   <Badge tone="gray">{a.county}</Badge>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">{a.message}</p>
-                <p className="mt-1 text-xs text-slate-400">{formatDate(a.created_at)}</p>
+                <p className="mt-1 text-sm text-content-muted">{a.message}</p>
+                <p className="mt-1 text-xs text-content-faint">Issued {formatDate(a.created_at)}</p>
               </div>
             </div>
           ))}

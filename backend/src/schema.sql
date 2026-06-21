@@ -187,6 +187,25 @@ CREATE TABLE IF NOT EXISTS activity_log (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+  id            SERIAL PRIMARY KEY,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type          TEXT NOT NULL CHECK (type IN ('weather','pest','advisory')),
+  title         TEXT NOT NULL,
+  message       TEXT NOT NULL,
+  severity      TEXT NOT NULL DEFAULT 'moderate',
+  county        TEXT,
+  link          TEXT,
+  source_id     INTEGER,
+  read_at       TIMESTAMPTZ,
+  sms_sent      BOOLEAN NOT NULL DEFAULT false,
+  whatsapp_sent BOOLEAN NOT NULL DEFAULT false,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE read_at IS NULL;
+
 CREATE INDEX IF NOT EXISTS idx_farmers_county ON farmers(county);
 CREATE INDEX IF NOT EXISTS idx_farmers_created ON farmers(created_at);
 CREATE INDEX IF NOT EXISTS idx_pest_county ON pest_alerts(county);

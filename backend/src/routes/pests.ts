@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db';
 import { asyncHandler, authenticate, authorize, AuthedRequest } from '../utils';
+import { notifyFarmers } from '../services/notifyService';
 
 const router = Router();
 router.use(authenticate);
@@ -47,10 +48,20 @@ router.post(
       'INSERT INTO pest_alerts(pest_name,crop,county,severity,description,status,reported_by) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *',
       [b.pest_name, b.crop || null, b.county, b.severity || 'moderate', b.description || null, b.status || 'active', req.user?.id || null]
     );
+    const alert = rows[0];
     await query("INSERT INTO activity_log(type,description) VALUES('pest',$1)", [
       `${b.pest_name} detected in ${b.county} County`,
     ]);
-    res.status(201).json(rows[0]);
+    await notifyFarmers({
+      type: 'pest',
+      title: `Pest alert: ${b.pest_name}`,
+      message: b.description || `${b.pest_name} reported in ${b.county} County. Severity: ${b.severity || 'moderate'}.`,
+      severity: b.severity || 'moderate',
+      county: b.county,
+      sourceId: alert.id,
+      senderId: req.user?.id,
+    });
+    res.status(201).json(alert);
   })
 );
 

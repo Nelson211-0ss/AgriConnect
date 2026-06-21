@@ -5,6 +5,7 @@ export const DEFAULT_PASSWORD = 'password123';
 
 /** Default landing page after login by role */
 export function homeRoute(role?: Role | null): string {
-  if (role === 'farmer' || role === 'buyer') return '/app/marketplace';
+  if (role === 'farmer') return '/app/weather';
+  if (role === 'buyer') return '/app/marketplace';
   return '/app/dashboard';
 }
