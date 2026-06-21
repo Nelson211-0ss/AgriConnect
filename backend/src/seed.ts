@@ -70,6 +70,7 @@ function phone() {
 export async function runSchema() {
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   await pool.query(schema);
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT');
   console.log('[seed] schema ensured');
 }
 

@@ -5,7 +5,8 @@ import { api } from '@/lib/api';
 import { Button, Card, Input, Select, Modal, Table, Th, Td, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
 import { ROLE_LABELS, useAuth } from '@/context/AuthContext';
-import { formatDate, initials, cn } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
+import { UserAvatar } from '@/components/UserAvatar';
 import { DEFAULT_PASSWORD } from '@/lib/constants';
 
 interface UserRow {
@@ -16,6 +17,7 @@ interface UserRow {
   phone: string;
   county: string;
   status: string;
+  avatar_url?: string | null;
   created_at: string;
 }
 
@@ -141,10 +143,8 @@ export default function Users() {
                 <tr key={u.id} className="hover:bg-slate-50/50">
                   <Td>
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-forest-50 text-sm font-semibold text-forest">
-                        {initials(u.name)}
-                      </div>
-                      <span className="font-medium text-ink">{u.name}</span>
+                      <UserAvatar name={u.name} avatarUrl={u.avatar_url} size="md" />
+                      <span className="font-medium text-ink dark:text-white">{u.name}</span>
                     </div>
                   </Td>
                   <Td>

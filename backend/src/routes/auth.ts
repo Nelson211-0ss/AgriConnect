@@ -14,6 +14,19 @@ interface UserRow {
   role: Role;
   phone: string | null;
   county: string | null;
+  avatar_url: string | null;
+}
+
+function publicUser(row: Pick<UserRow, 'id' | 'name' | 'email' | 'role' | 'phone' | 'county' | 'avatar_url'>) {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role,
+    phone: row.phone,
+    county: row.county,
+    avatar_url: row.avatar_url,
+  };
 }
 
 router.post(
@@ -27,7 +40,7 @@ router.post(
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
     const payload = { id: user.id, name: user.name, email: user.email, role: user.role };
-    return res.json({ token: signToken(payload), user: payload });
+    return res.json({ token: signToken(payload), user: publicUser(user) });
   })
 );
 
@@ -54,7 +67,7 @@ router.post(
     );
     const user = rows[0];
     const payload = { id: user.id, name: user.name, email: user.email, role: user.role };
-    return res.status(201).json({ token: signToken(payload), user: payload, defaultPassword: config.defaultPassword });
+    return res.status(201).json({ token: signToken(payload), user: publicUser({ ...user, avatar_url: null }), defaultPassword: config.defaultPassword });
   })
 );
 
@@ -62,7 +75,42 @@ router.get(
   '/me',
   authenticate,
   asyncHandler(async (req: AuthedRequest, res) => {
-    res.json({ user: req.user });
+    const { rows } = await query<UserRow>(
+      'SELECT id, name, email, role, phone, county, avatar_url FROM users WHERE id=$1',
+      [req.user!.id]
+    );
+    if (!rows[0]) return res.status(404).json({ message: 'User not found' });
+    res.json({ user: publicUser(rows[0]) });
+  })
+);
+
+router.patch(
+  '/profile',
+  authenticate,
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const { name, avatar_url } = req.body || {};
+    if (avatar_url && typeof avatar_url === 'string' && avatar_url.length > 500_000) {
+      return res.status(400).json({ message: 'Profile photo is too large' });
+    }
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    if (name !== undefined) {
+      params.push(String(name).trim());
+      sets.push(`name=$${params.length}`);
+    }
+    if (avatar_url !== undefined) {
+      params.push(avatar_url || null);
+      sets.push(`avatar_url=$${params.length}`);
+    }
+    if (!sets.length) return res.status(400).json({ message: 'No fields to update' });
+    params.push(req.user!.id);
+    const { rows } = await query<UserRow>(
+      `UPDATE users SET ${sets.join(', ')} WHERE id=$${params.length}
+       RETURNING id, name, email, role, phone, county, avatar_url`,
+      params
+    );
+    if (!rows[0]) return res.status(404).json({ message: 'User not found' });
+    res.json({ user: publicUser(rows[0]) });
   })
 );
 

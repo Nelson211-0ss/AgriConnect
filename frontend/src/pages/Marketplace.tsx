@@ -3,6 +3,7 @@ import { Plus, MapPin, Phone, Package, Trash2, HandHeart, Sprout, ShoppingCart, 
 import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
+import { RoleWelcome } from '@/components/RoleWelcome';
 import { useAuth } from '@/context/AuthContext';
 import { SSP, formatNumber, timeAgo, fileToCompressedDataUrl, cn } from '@/lib/utils';
 
@@ -55,13 +56,22 @@ export default function Marketplace() {
   const isFarmer = user?.role === 'farmer';
   const isBuyer = user?.role === 'buyer';
   const isAdmin = user?.role === 'super_admin';
+  const showWelcome = isFarmer || isBuyer;
 
-  const [tab, setTab] = useState<'produce' | 'demand'>('produce');
+  const [tab, setTab] = useState<'produce' | 'demand'>(isBuyer ? 'demand' : 'produce');
   const [filter, setFilter] = useState('');
 
   return (
     <div className="animate-fade-in">
-      <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+      {showWelcome ? (
+        <RoleWelcome />
+      ) : (
+        <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+      )}
+
+      {showWelcome && (
+        <h3 className="mb-4 text-lg font-semibold text-ink dark:text-white">Marketplace</h3>
+      )}
 
       {/* Tab switcher */}
       <div className="mb-5 inline-flex rounded-md border border-slate-200 bg-white p-1">

@@ -8,6 +8,9 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  phone?: string | null;
+  county?: string | null;
+  avatar_url?: string | null;
 }
 
 interface AuthContextValue {
@@ -15,6 +18,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
   register: (data: { name: string; email: string; role?: Role; phone?: string; county?: string }) => Promise<User>;
+  updateProfile: (data: { name?: string; avatar_url?: string | null }) => Promise<User>;
   logout: () => void;
 }
 
@@ -58,12 +62,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res.user;
   };
 
+  const updateProfile: AuthContextValue['updateProfile'] = async (data) => {
+    const res = await api.patch<{ user: User }>('/auth/profile', data);
+    setUser(res.user);
+    return res.user;
+  };
+
   const logout = () => {
     clearToken();
     setUser(null);
   };
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, login, register, updateProfile, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);

@@ -24,7 +24,7 @@ router.get(
     }
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const rows = await query(
-      `SELECT u.id,u.name,u.email,u.role,u.phone,u.county,u.status,u.created_at,
+      `SELECT u.id,u.name,u.email,u.role,u.phone,u.county,u.status,u.avatar_url,u.created_at,
               (SELECT count(*)::int FROM farmers f WHERE f.registered_by=u.id) AS farmers_registered
        FROM users u ${whereSql} ORDER BY u.created_at DESC`,
       params

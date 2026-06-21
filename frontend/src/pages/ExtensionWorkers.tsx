@@ -4,7 +4,8 @@ import { api } from '@/lib/api';
 import { Button, Card, Input, Select, Modal, Table, Th, Td, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
 import { useAuth } from '@/context/AuthContext';
-import { formatDate, initials } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+import { UserAvatar } from '@/components/UserAvatar';
 import { DEFAULT_PASSWORD } from '@/lib/constants';
 
 interface UserRow {
@@ -15,6 +16,7 @@ interface UserRow {
   phone: string;
   county: string;
   status: string;
+  avatar_url?: string | null;
   created_at: string;
   farmers_registered: number;
 }
@@ -113,10 +115,8 @@ export default function ExtensionWorkers() {
                 <tr key={u.id} className="hover:bg-slate-50/50">
                   <Td>
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-forest-50 text-sm font-semibold text-forest">
-                        {initials(u.name)}
-                      </div>
-                      <span className="font-medium text-ink">{u.name}</span>
+                      <UserAvatar name={u.name} avatarUrl={u.avatar_url} size="md" />
+                      <span className="font-medium text-ink dark:text-white">{u.name}</span>
                     </div>
                   </Td>
                   <Td>

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone         TEXT,
   county        TEXT,
   status        TEXT NOT NULL DEFAULT 'active',
+  avatar_url    TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
