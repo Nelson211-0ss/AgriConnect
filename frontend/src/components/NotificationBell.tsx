@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCheck, CloudSun, Bug, BookOpen, MessageSquare, Smartphone } from 'lucide-react';
+import { Bell, CheckCheck, CloudSun, Bug, BookOpen, MessageSquare, Smartphone, AlertTriangle } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Badge, Button, Spinner, severityTone } from '@/components/ui';
+import { FARMER_LOGIN_ALERTS_KEY } from '@/lib/constants';
+import { useAuth } from '@/context/AuthContext';
+import { Badge, Button, Modal, Spinner, severityTone } from '@/components/ui';
 import { cn, timeAgo } from '@/lib/utils';
 
 export interface Notification {
@@ -178,6 +180,127 @@ export function NotificationBell({ enabled = true }: { enabled?: boolean }) {
         </div>
       )}
     </div>
+  );
+}
+
+export function FarmerLoginAlertsModal() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const { unread, items, loading, markRead, markAllRead, refresh } = useNotifications(user?.role === 'farmer');
+
+  useEffect(() => {
+    if (user?.role !== 'farmer' || checked) return;
+    if (sessionStorage.getItem(FARMER_LOGIN_ALERTS_KEY) !== '1') return;
+
+    sessionStorage.removeItem(FARMER_LOGIN_ALERTS_KEY);
+    setChecked(true);
+
+    (async () => {
+      try {
+        const summary = await api.get<{ unread: number }>('/notifications/summary');
+        if (summary.unread > 0) {
+          await refresh();
+          setOpen(true);
+        }
+      } catch {
+        /* no popup if fetch fails */
+      }
+    })();
+  }, [user?.role, user?.id, checked, refresh]);
+
+  const unreadItems = items.filter((n) => !n.read_at);
+
+  const close = () => setOpen(false);
+
+  const dismissAll = async () => {
+    await markAllRead();
+    close();
+  };
+
+  const openItem = async (n: Notification) => {
+    if (!n.read_at) await markRead(n.id);
+    close();
+    if (n.link) navigate(n.link);
+  };
+
+  if (user?.role !== 'farmer') return null;
+
+  const firstName = user.name.split(' ')[0];
+
+  return (
+    <Modal open={open} onClose={close} title="New alerts for you" wide>
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+            <AlertTriangle size={22} />
+          </div>
+          <div>
+            <p className="font-semibold text-ink">Welcome back, {firstName}!</p>
+            <p className="mt-1 text-sm text-content-muted">
+              You have <strong className="text-ink">{unread}</strong> new alert{unread === 1 ? '' : 's'} from extension officers and admins.
+              {user.phone ? ' SMS and WhatsApp were also sent to your registered number.' : ' Add your phone in Settings to receive SMS and WhatsApp alerts.'}
+            </p>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Spinner className="h-7 w-7" />
+          </div>
+        ) : (
+          <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+            {unreadItems.map((n) => {
+              const meta = TYPE_META[n.type];
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => openItem(n)}
+                  className="flex w-full items-start gap-3 rounded-xl border border-line-subtle bg-mist p-3 text-left transition hover:bg-surface-muted dark:border-line dark:bg-slate-800/50 dark:hover:bg-slate-800"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-forest dark:bg-slate-900 dark:text-leaf">
+                    <Icon size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink">{n.title}</p>
+                    <p className="mt-0.5 line-clamp-3 text-xs text-content-muted">{n.message}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <Badge tone={severityTone(n.severity)}>{n.severity}</Badge>
+                      {n.county && <Badge tone="gray">{n.county}</Badge>}
+                      <span className="text-[11px] text-content-faint">{timeAgo(n.created_at)}</span>
+                    </div>
+                    {(n.sms_sent || n.whatsapp_sent) && (
+                      <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-content-faint">
+                        {n.sms_sent && (
+                          <span className="inline-flex items-center gap-0.5">
+                            <MessageSquare size={10} /> SMS sent
+                          </span>
+                        )}
+                        {n.whatsapp_sent && (
+                          <span className="inline-flex items-center gap-0.5">
+                            <Smartphone size={10} /> WhatsApp sent
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex flex-wrap justify-end gap-2 border-t border-line-subtle pt-4 dark:border-line">
+          <Button variant="outline" onClick={dismissAll}>
+            <CheckCheck size={16} /> Mark all read
+          </Button>
+          <Button onClick={close}>Got it</Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

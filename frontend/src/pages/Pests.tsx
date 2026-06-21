@@ -3,6 +3,7 @@ import { Plus, Bug, MapPin, AlertTriangle, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Card, CardHeader, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, Table, Th, Td, severityTone } from '@/components/ui';
 import { PageHeader } from '@/components/common';
+import { MobileShell, MobilePageHeader, MobileContent, MobileListCard } from '@/components/mobile';
 import { LeafletMap, MapPoint } from '@/components/LeafletMap';
 import { useAuth } from '@/context/AuthContext';
 import { formatDate } from '@/lib/utils';
@@ -78,6 +79,46 @@ export default function Pests() {
 
   return (
     <div className="animate-fade-in space-y-4">
+      <MobileShell>
+        <MobilePageHeader
+          title="Pest Alerts"
+          subtitle={`${active.length} active outbreak${active.length === 1 ? '' : 's'}`}
+          action={
+            canEdit && (
+              <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+                <Plus size={14} />
+              </Button>
+            )
+          }
+        />
+        <MobileContent>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-7 w-7" />
+            </div>
+          ) : rows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-content-muted">No pest alerts.</p>
+          ) : (
+            rows.map((r) => (
+              <MobileListCard
+                key={r.id}
+                icon={Bug}
+                iconBg={sevColor(r.severity)}
+                title={r.pest_name}
+                subtitle={
+                  <>
+                    {r.crop} · {r.county} County
+                    <span className="mt-1 block line-clamp-2">{r.description}</span>
+                  </>
+                }
+                right={<Badge tone={severityTone(r.severity)}>{r.severity}</Badge>}
+              />
+            ))
+          )}
+        </MobileContent>
+      </MobileShell>
+
+      <div className="hidden md:block">
       <PageHeader
         title="Pest & Disease Alerts"
         subtitle="County-based outbreak monitoring and notifications"
@@ -168,6 +209,7 @@ export default function Pests() {
             </div>
           )}
         </Card>
+      </div>
       </div>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Report Pest Outbreak">

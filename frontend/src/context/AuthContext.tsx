@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { api, setToken, clearToken, getToken } from '@/lib/api';
+import { queueFarmerLoginAlerts, FARMER_LOGIN_ALERTS_KEY } from '@/lib/constants';
 
 export type Role = 'super_admin' | 'extension_officer' | 'farmer' | 'buyer';
 
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.post<{ token: string; user: User }>('/auth/login', { email, password });
     setToken(res.token);
     setUser(res.user);
+    queueFarmerLoginAlerts(res.user.role);
     return res.user;
   };
 
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.post<{ token: string; user: User }>('/auth/register', data);
     setToken(res.token);
     setUser(res.user);
+    queueFarmerLoginAlerts(res.user.role);
     return res.user;
   };
 
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    sessionStorage.removeItem(FARMER_LOGIN_ALERTS_KEY);
     clearToken();
     setUser(null);
   };

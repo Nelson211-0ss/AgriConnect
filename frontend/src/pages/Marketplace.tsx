@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
 import { RoleWelcome } from '@/components/RoleWelcome';
+import { MobileShell, MobilePageHeader } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { SSP, formatNumber, timeAgo, fileToCompressedDataUrl, cn } from '@/lib/utils';
 
@@ -88,20 +89,91 @@ export default function Marketplace() {
       {showWelcome ? (
         <>
           <RoleWelcome />
+          <MobileShell className="sm:-mx-0">
+            <MobilePageHeader
+              title="Marketplace"
+              subtitle="Farmer produce & buyer demand"
+            />
+            <MarketplaceBody
+              tab={tab}
+              setTab={setTab}
+              filter={filter}
+              setFilter={setFilter}
+              listingCounts={listingCounts}
+              isFarmer={isFarmer}
+              isBuyer={isBuyer}
+              isAdmin={isAdmin}
+              refreshCounts={refreshCounts}
+              mobile
+            />
+          </MobileShell>
           <div className="hidden md:block">
             <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+            <MarketplaceBody
+              tab={tab}
+              setTab={setTab}
+              filter={filter}
+              setFilter={setFilter}
+              listingCounts={listingCounts}
+              isFarmer={isFarmer}
+              isBuyer={isBuyer}
+              isAdmin={isAdmin}
+              refreshCounts={refreshCounts}
+            />
           </div>
         </>
       ) : (
-        <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+        <>
+          <PageHeader title="Marketplace" subtitle="Farmer produce for sale and buyer demand in one place" />
+          <MarketplaceBody
+            tab={tab}
+            setTab={setTab}
+            filter={filter}
+            setFilter={setFilter}
+            listingCounts={listingCounts}
+            isFarmer={isFarmer}
+            isBuyer={isBuyer}
+            isAdmin={isAdmin}
+            refreshCounts={refreshCounts}
+          />
+        </>
       )}
+    </div>
+  );
+}
 
-      {showWelcome && (
-        <h3 className="mb-4 text-lg font-semibold text-ink dark:text-white md:hidden">Marketplace</h3>
-      )}
-
+function MarketplaceBody({
+  tab,
+  setTab,
+  filter,
+  setFilter,
+  listingCounts,
+  isFarmer,
+  isBuyer,
+  isAdmin,
+  refreshCounts,
+  mobile = false,
+}: {
+  tab: 'produce' | 'demand';
+  setTab: (t: 'produce' | 'demand') => void;
+  filter: string;
+  setFilter: (f: string) => void;
+  listingCounts: Record<string, number>;
+  isFarmer: boolean;
+  isBuyer: boolean;
+  isAdmin: boolean;
+  refreshCounts: () => void;
+  mobile?: boolean;
+}) {
+  return (
+    <>
       {/* Tab switcher */}
-      <div className="mb-5 inline-flex rounded-md border border-line bg-surface p-1 dark:border-line dark:bg-surface-elevated">
+      <div
+        className={cn(
+          'mb-5 inline-flex rounded-md border border-line bg-surface p-1 dark:border-line dark:bg-surface-elevated',
+          mobile && 'mx-4 mt-4 w-[calc(100%-2rem)] justify-stretch rounded-2xl'
+        )}
+      >
         <button
           onClick={() => {
             setTab('produce');
@@ -135,7 +207,7 @@ export default function Marketplace() {
       </div>
 
       {/* Commodity filter */}
-      <div className="mb-4 max-w-sm">
+      <div className={cn('mb-4 max-w-sm', mobile && 'mx-4 max-w-none')}>
         <Select
           label={tab === 'produce' ? 'Filter produce' : 'Filter demand'}
           value={filter}
@@ -151,11 +223,11 @@ export default function Marketplace() {
       </div>
 
       {tab === 'produce' ? (
-        <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} onUpdated={refreshCounts} />
+        <ProduceTab filter={filter} canPost={isFarmer || isAdmin} canBuy={isBuyer || isAdmin} canDelete={isFarmer || isAdmin} onUpdated={refreshCounts} mobile={mobile} />
       ) : (
-        <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} onUpdated={refreshCounts} />
+        <DemandTab filter={filter} canPost={isBuyer || isAdmin} canShowInterest={isFarmer} canDelete={isBuyer || isAdmin} onUpdated={refreshCounts} mobile={mobile} />
       )}
-    </div>
+    </>
   );
 }
 
@@ -167,12 +239,14 @@ function ProduceTab({
   canBuy,
   canDelete,
   onUpdated,
+  mobile = false,
 }: {
   filter: string;
   canPost: boolean;
   canBuy: boolean;
   canDelete: boolean;
   onUpdated?: () => void;
+  mobile?: boolean;
 }) {
   const [rows, setRows] = useState<ProduceListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,7 +277,7 @@ function ProduceTab({
   return (
     <>
       {canPost && (
-        <div className="mb-4 flex justify-end">
+        <div className={cn('mb-4 flex justify-end', mobile && 'mx-4')}>
           <Button onClick={() => setOpen(true)}>
             <Plus size={16} /> Post Produce
           </Button>
@@ -219,7 +293,7 @@ function ProduceTab({
           <EmptyState title="No produce listed yet" hint="Farmers can post produce with photos for buyers to browse." />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={cn('grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', mobile && 'px-4')}>
           {rows.map((l) => (
             <Card key={l.id} className="flex flex-col overflow-hidden transition hover:shadow-card">
               {/* Photo */}
@@ -425,12 +499,14 @@ function DemandTab({
   canShowInterest,
   canDelete,
   onUpdated,
+  mobile = false,
 }: {
   filter: string;
   canPost: boolean;
   canShowInterest: boolean;
   canDelete: boolean;
   onUpdated?: () => void;
+  mobile?: boolean;
 }) {
   const [rows, setRows] = useState<DemandListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -468,7 +544,7 @@ function DemandTab({
   return (
     <>
       {canPost && (
-        <div className="mb-4 flex justify-end">
+        <div className={cn('mb-4 flex justify-end', mobile && 'mx-4')}>
           <Button onClick={() => setOpen(true)}>
             <Plus size={16} /> Post Demand
           </Button>
@@ -484,7 +560,7 @@ function DemandTab({
           <EmptyState title="No demand posted yet" hint="Buyers can post buying opportunities here." />
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={cn('grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', mobile && 'px-4')}>
           {rows.map((l) => (
             <Card key={l.id} className="flex flex-col transition hover:shadow-card">
               <CardBody className="flex flex-1 flex-col pt-5">

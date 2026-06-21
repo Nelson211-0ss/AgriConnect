@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
 import { Plus, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, CloudLightning, AlertTriangle, RefreshCw } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Card, CardHeader, CardBody, Select, Textarea, Modal, Badge, Spinner, severityTone } from '@/components/ui';
-import { PageHeader } from '@/components/common';
+import { PageHeader, CHART_COLORS } from '@/components/common';
+import { MobileShell, MobilePageHeader, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
-import { FarmerAlertsBanner } from '@/components/NotificationBell';
 import { useChartTheme } from '@/lib/chartTheme';
 import { formatDate, timeAgo, cn } from '@/lib/utils';
 
@@ -54,6 +54,17 @@ const condIcon = (c: string) => {
 
 const ALERT_TYPES = ['Heavy Rain', 'Flood Warning', 'Drought Alert', 'Wind Warning'];
 const COUNTIES = ['Juba', 'Wau', 'Aweil', 'Bor', 'Rumbek'];
+
+function shortForecastLabel(entry: Forecast): string {
+  if (entry.day.startsWith('Today')) return 'Today';
+  if (entry.day.startsWith('Tomorrow')) return 'Tomorrow';
+  const d = new Date(`${entry.date}T12:00:00`);
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+}
+
+function toChartForecast(forecast: Forecast[]) {
+  return forecast.map((f) => ({ ...f, label: shortForecastLabel(f) }));
+}
 
 function Metric({ icon, val, label }: { icon: React.ReactNode; val: string; label: string }) {
   return (
@@ -126,6 +137,7 @@ export default function Weather() {
 
   const cur = data.current[selected];
   const forecast = cur.forecast ?? [];
+  const chartForecast = toChartForecast(forecast);
   const CondIcon = condIcon(cur.condition);
   const observedLabel = cur.observedAt
     ? new Date(cur.observedAt).toLocaleString('en-GB', {
@@ -139,8 +151,103 @@ export default function Weather() {
 
   return (
     <div className="animate-fade-in space-y-4">
-      {user?.role === 'farmer' && <FarmerAlertsBanner />}
+      {/* Mobile app UI */}
+      <MobileShell>
+        <MobilePageHeader
+          title="Weather"
+          subtitle={data.fetchedAt ? `Updated ${timeAgo(data.fetchedAt)}` : 'Live forecast'}
+          action={
+            canEdit ? (
+              <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+                <Plus size={14} />
+              </Button>
+            ) : (
+              <button type="button" onClick={() => load(true)} className="rounded-lg bg-white/15 p-2">
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              </button>
+            )
+          }
+        />
+        <div className="border-b border-line bg-surface px-4 py-3 dark:border-line dark:bg-surface-elevated">
+          <MobileChipRow
+            items={data.current.map((c) => c.county)}
+            active={cur.county}
+            onSelect={(county) => {
+              const idx = data.current.findIndex((c) => c.county === county);
+              if (idx >= 0) setSelected(idx);
+            }}
+          />
+        </div>
+        <div className="px-4 pt-4">
+          <div className="rounded-2xl p-5 text-white shadow-soft" style={{ background: 'linear-gradient(150deg,#0B7A3E,#064a25)' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm opacity-80">{cur.county} County</p>
+                <p className="text-4xl font-bold">{cur.temperature}°C</p>
+                <p className="mt-1 text-sm opacity-90">{cur.condition}</p>
+              </div>
+              <CondIcon size={56} className="opacity-90" />
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="rounded-xl bg-white/10 p-2">
+                <p className="opacity-80">Humidity</p>
+                <p className="font-semibold">{cur.humidity}%</p>
+              </div>
+              <div className="rounded-xl bg-white/10 p-2">
+                <p className="opacity-80">Rain</p>
+                <p className="font-semibold">{cur.rainfall}mm</p>
+              </div>
+              <div className="rounded-xl bg-white/10 p-2">
+                <p className="opacity-80">Wind</p>
+                <p className="font-semibold">{cur.windSpeed} km/h</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <MobileContent>
+          <p className="text-sm font-semibold text-ink">7-Day Forecast</p>
+          {chartForecast.map((day, i) => (
+            <MobileListCard
+              key={day.date}
+              icon={condIcon(day.condition)}
+              iconBg={CHART_COLORS[i % CHART_COLORS.length]}
+              title={day.label}
+              subtitle={
+                <>
+                  {day.condition} · Rain {day.rainfall}mm
+                </>
+              }
+              right={
+                <div className="text-right">
+                  <p className="font-bold text-ink">{day.temp}°</p>
+                  <p className="text-xs text-content-muted">Low {day.tempMin}°</p>
+                </div>
+              }
+            />
+          ))}
+          {data.alerts.length > 0 && (
+            <>
+              <p className="pt-2 text-sm font-semibold text-ink">Active Alerts</p>
+              {data.alerts.map((a) => (
+                <MobileListCard
+                  key={a.id}
+                  icon={AlertTriangle}
+                  iconBg={a.severity === 'high' || a.severity === 'critical' ? '#DC2626' : '#F59E0B'}
+                  title={a.type}
+                  subtitle={
+                    <>
+                      {a.message}
+                      <span className="mt-1 block text-content-faint">{formatDate(a.created_at)}</span>
+                    </>
+                  }
+                />
+              ))}
+            </>
+          )}
+        </MobileContent>
+      </MobileShell>
 
+      <div className="hidden md:block">
       <PageHeader
         title="Weather Intelligence"
         subtitle={
@@ -209,8 +316,8 @@ export default function Weather() {
         <Card className="lg:col-span-2">
           <CardHeader title="7-Day Forecast" subtitle={`Real dates & outlook for ${cur.county} County`} />
           <CardBody>
-            <ResponsiveContainer width="100%" height={140}>
-              <AreaChart data={forecast}>
+            <ResponsiveContainer width="100%" height={150}>
+              <AreaChart data={chartForecast} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}>
                 <defs>
                   <linearGradient id="temp" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.4} />
@@ -218,19 +325,49 @@ export default function Weather() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: chart.tick }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 11, fill: chart.tick }} axisLine={false} tickLine={false} unit="°" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: chart.tick }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  height={36}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: chart.tick }}
+                  axisLine={false}
+                  tickLine={false}
+                  unit="°"
+                  width={36}
+                />
                 <Tooltip contentStyle={chart.tooltip.contentStyle} />
                 <Area type="monotone" dataKey="temp" stroke="#F59E0B" strokeWidth={2.5} fill="url(#temp)" name="High °C" />
               </AreaChart>
             </ResponsiveContainer>
-            <ResponsiveContainer width="100%" height={120}>
-              <BarChart data={forecast}>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={chartForecast} margin={{ top: 20, right: 12, left: 4, bottom: 0 }} barCategoryGap="32%">
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: chart.tick }} axisLine={false} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 11, fill: chart.tick }} axisLine={false} tickLine={false} unit="mm" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: chart.tick }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  height={36}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: chart.tick }}
+                  axisLine={false}
+                  tickLine={false}
+                  unit="mm"
+                  width={36}
+                />
                 <Tooltip contentStyle={chart.tooltip.contentStyle} />
-                <Bar dataKey="rainfall" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Rainfall mm" />
+                <Bar dataKey="rainfall" barSize={20} radius={[6, 6, 0, 0]} name="Rainfall mm">
+                  {chartForecast.map((entry, i) => (
+                    <Cell key={entry.date} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardBody>
@@ -265,6 +402,7 @@ export default function Weather() {
           ))}
         </CardBody>
       </Card>
+      </div>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Issue Weather Alert">
         <div className="space-y-4">

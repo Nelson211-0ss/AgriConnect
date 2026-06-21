@@ -3,6 +3,7 @@ import { Plus, Search, Eye, Trash2, Sprout, Beef, CloudSun, Droplets, Bug, Mount
 import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
+import { MobileShell, MobilePageHeader, MobileSearchBar, MobileContent, MobileChipRow, MobileListCard } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { formatDate, formatNumber, cn } from '@/lib/utils';
 
@@ -73,6 +74,58 @@ export default function Advisories() {
 
   return (
     <div className="animate-fade-in">
+      <MobileShell>
+        <MobilePageHeader
+          title="Crop Advice"
+          subtitle="Climate-smart guidance"
+          action={
+            canEdit && (
+              <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+                <Plus size={14} />
+              </Button>
+            )
+          }
+        />
+        <MobileSearchBar value={search} onChange={setSearch} placeholder="Search advisories..." />
+        <div className="border-b border-line bg-surface px-4 py-3 dark:border-line dark:bg-surface-elevated">
+          <MobileChipRow
+            items={['', ...CATEGORIES]}
+            active={category}
+            onSelect={setCategory}
+          />
+        </div>
+        <MobileContent>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-7 w-7" />
+            </div>
+          ) : rows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-content-muted">No advisories found.</p>
+          ) : (
+            rows.map((a) => {
+              const Icon = ICONS[a.category] || Sprout;
+              return (
+                <MobileListCard
+                  key={a.id}
+                  icon={Icon}
+                  iconBg="#0B7A3E"
+                  title={a.title}
+                  subtitle={
+                    <>
+                      {a.category} · {formatNumber(a.views)} views
+                      <span className="mt-1 block line-clamp-2">{a.content}</span>
+                    </>
+                  }
+                  onClick={() => setView(a)}
+                  right={<Badge tone={a.status === 'published' ? 'green' : 'amber'}>{a.status}</Badge>}
+                />
+              );
+            })
+          )}
+        </MobileContent>
+      </MobileShell>
+
+      <div className="hidden md:block">
       <PageHeader
         title="Agricultural Advisories"
         subtitle="Climate-smart guidance for farmers across all counties"
@@ -151,6 +204,8 @@ export default function Advisories() {
           })}
         </div>
       )}
+
+      </div>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Create Advisory" wide>
         <div className="space-y-4">

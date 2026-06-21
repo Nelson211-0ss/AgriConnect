@@ -9,3 +9,12 @@ export function homeRoute(role?: Role | null): string {
   if (role === 'buyer') return '/app/marketplace';
   return '/app/dashboard';
 }
+
+/** Session flag: show farmer alert popup once after login */
+export const FARMER_LOGIN_ALERTS_KEY = 'agriconnect_show_farmer_alerts';
+
+export function queueFarmerLoginAlerts(role?: Role | null) {
+  if (role === 'farmer') {
+    sessionStorage.setItem(FARMER_LOGIN_ALERTS_KEY, '1');
+  }
+}

@@ -27,7 +27,8 @@ import { useAuth, ROLE_LABELS, Role } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { NotificationBell } from '@/components/NotificationBell';
+import { NotificationBell, FarmerLoginAlertsModal } from '@/components/NotificationBell';
+import { MobileBottomNav } from '@/components/mobile';
 
 interface NavItem {
   to: string;
@@ -134,6 +135,7 @@ export function Layout() {
 
   return (
     <div className="box-border flex h-screen overflow-hidden gap-4 bg-mist p-4 font-sans antialiased md:gap-6 md:p-6 lg:p-8">
+      <FarmerLoginAlertsModal />
       {/* Desktop sidebar */}
       <aside
         className={cn(
@@ -156,7 +158,7 @@ export function Layout() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="mb-4 flex h-16 shrink-0 items-center gap-3 border border-line bg-surface px-4 md:mb-6 md:px-6 dark:border-line dark:bg-surface-elevated">
+        <header className="mb-2 flex h-14 shrink-0 items-center gap-2 border border-line bg-surface px-3 md:mb-6 md:h-16 md:gap-3 md:px-6 dark:border-line dark:bg-surface-elevated">
           <button className="hidden rounded-lg p-2 text-content-muted transition hover:bg-surface-muted md:inline-flex dark:hover:bg-slate-800" onClick={() => setCollapsed((c) => !c)}>
             <ChevronLeft size={20} className={cn('transition-transform', collapsed && 'rotate-180')} />
           </button>
@@ -185,10 +187,16 @@ export function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto font-sans">
+        <main
+          className={cn(
+            'flex-1 overflow-y-auto font-sans',
+            (user?.role === 'farmer' || user?.role === 'buyer') && 'pb-20 md:pb-0'
+          )}
+        >
           <Outlet />
         </main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

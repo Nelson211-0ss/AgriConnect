@@ -4,6 +4,7 @@ import { Plus, Search, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Card, CardHeader, CardBody, Input, Select, Modal, Table, Th, Td, Spinner, Badge } from '@/components/ui';
 import { PageHeader, CHART_COLORS } from '@/components/common';
+import { MobileShell, MobilePageHeader, MobileSearchBar, MobileContent, MobilePriceCard } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { SSP, formatDate } from '@/lib/utils';
 
@@ -66,6 +67,48 @@ export default function Market() {
 
   return (
     <div className="animate-fade-in space-y-4">
+      {/* Mobile app UI */}
+      <MobileShell>
+        <MobilePageHeader
+          title="Market Prices"
+          subtitle="Live commodity prices"
+          action={
+            canEdit && (
+              <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+                <Plus size={14} />
+              </Button>
+            )
+          }
+        />
+        <MobileSearchBar value={search} onChange={setSearch} placeholder="Search commodities..." />
+        <MobileContent>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="h-7 w-7" />
+            </div>
+          ) : prices.length === 0 ? (
+            <p className="py-8 text-center text-sm text-content-muted">No prices found.</p>
+          ) : (
+            prices.map((p, i) => {
+              const t = trend(p);
+              return (
+                <MobilePriceCard
+                  key={p.id}
+                  commodity={p.commodity}
+                  price={p.price}
+                  unit={p.unit}
+                  market={p.market_location || `${p.county} Market`}
+                  changePct={t.pct}
+                  index={i}
+                />
+              );
+            })
+          )}
+        </MobileContent>
+      </MobileShell>
+
+      {/* Desktop UI */}
+      <div className="hidden md:block">
       <PageHeader
         title="Market Information System"
         subtitle="Live commodity prices and market trends"
@@ -162,6 +205,7 @@ export default function Market() {
           </tbody>
         </Table>
       </Card>
+      </div>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Add Market Price">
         <div className="space-y-4">
