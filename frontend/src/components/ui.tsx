@@ -45,7 +45,7 @@ export function Button({
 
 /* ---------------- Card ---------------- */
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn('rounded-2xl bg-white shadow-soft border border-slate-100', className)}>{children}</div>;
+  return <div className={cn('rounded-md bg-white shadow-soft border border-slate-100', className)}>{children}</div>;
 }
 export function CardHeader({ title, subtitle, action }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
   return (

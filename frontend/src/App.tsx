@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Spinner } from './components/ui';
 import { Layout } from './components/Layout';
+import { RoleGuard, AppHome } from './components/RoleGuard';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -9,6 +10,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Farmers from './pages/Farmers';
 import ExtensionWorkers from './pages/ExtensionWorkers';
+import Users from './pages/Users';
 import Advisories from './pages/Advisories';
 import Market from './pages/Market';
 import Weather from './pages/Weather';
@@ -48,10 +50,25 @@ export default function App() {
           </Protected>
         }
       >
-        <Route index element={<Navigate to="/app/dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="farmers" element={<Farmers />} />
+        <Route index element={<AppHome />} />
+        <Route
+          path="dashboard"
+          element={
+            <RoleGuard allow={['super_admin', 'extension_officer']}>
+              <Dashboard />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="farmers"
+          element={
+            <RoleGuard allow={['super_admin', 'extension_officer']}>
+              <Farmers />
+            </RoleGuard>
+          }
+        />
         <Route path="extension-workers" element={<ExtensionWorkers />} />
+        <Route path="users" element={<Users />} />
         <Route path="advisories" element={<Advisories />} />
         <Route path="market" element={<Market />} />
         <Route path="weather" element={<Weather />} />

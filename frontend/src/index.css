@@ -15,8 +15,8 @@ body,
 }
 
 body {
-  @apply bg-mist text-ink antialiased;
-  font-family: 'Inter', system-ui, sans-serif;
+  @apply bg-mist text-ink antialiased font-sans;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -33,5 +33,5 @@ body {
 
 .leaflet-container {
   font-family: inherit;
-  border-radius: 16px;
+  border-radius: 6px;
 }

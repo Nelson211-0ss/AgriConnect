@@ -8,7 +8,7 @@ Built as an MVP prototype suitable for presentation to **CORWADO South Sudan, th
 
 ---
 
-## ✨ Features
+## Features
 
 | Module | Highlights |
 | --- | --- |
@@ -64,7 +64,9 @@ Then open:
 
 The backend automatically waits for PostgreSQL, creates the schema, and seeds demo data on first start (1,000 farmers, 100 buyers, 50 officers, advisories, alerts, market prices and more).
 
-### Demo accounts (password: `password123`)
+### Demo accounts (default password: `password123`)
+
+All seeded, admin-created, and self-registered accounts use the same default password unless changed in production via `DEFAULT_PASSWORD` in the backend environment.
 
 | Role | Email |
 | --- | --- |
@@ -73,7 +75,7 @@ The backend automatically waits for PostgreSQL, creates the schema, and seeds de
 | Farmer | `farmer@corwado.org` |
 | Buyer | `buyer@corwado.org` |
 
-> The login screen has one-click quick-login buttons for each role.
+Super Admin can also create farmer and buyer accounts under **User Accounts** in the dashboard. Farmers and buyers may self-register at `/register` using the same default password.
 
 ---
 

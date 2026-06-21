@@ -15,6 +15,7 @@ import marketRoutes from './routes/market';
 import weatherRoutes from './routes/weather';
 import pestRoutes from './routes/pests';
 import marketplaceRoutes from './routes/marketplace';
+import produceRoutes from './routes/produce';
 import financialRoutes from './routes/financial';
 import messagingRoutes from './routes/messaging';
 import trainingRoutes from './routes/training';
@@ -22,9 +23,22 @@ import reportsRoutes from './routes/reports';
 
 const app = express();
 
-app.use(helmet());
+// The platform is served over plain HTTP (local/Docker/pilot). Disable the
+// HTTPS-forcing protections so browsers don't upgrade requests to https://
+// (which would have nothing listening and fail with "Failed to fetch").
+app.use(
+  helmet({
+    hsts: false,
+    contentSecurityPolicy: false,
+  })
+);
+// Actively clear any HSTS policy a browser may have cached from earlier responses.
+app.use((_req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=0');
+  next();
+});
 app.use(cors({ origin: config.corsOrigin }));
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '8mb' }));
 app.use(morgan('dev'));
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'agriconnect-api' }));
@@ -38,6 +52,7 @@ app.use('/api/market', marketRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/pests', pestRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/produce', produceRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/messaging', messagingRoutes);
 app.use('/api/training', trainingRoutes);

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button, Input } from '@/components/ui';
+import { DEFAULT_PASSWORD, homeRoute } from '@/lib/constants';
+import { LoginFarmerSlider, LOGIN_SLIDES } from '@/components/LoginFarmerSlider';
 
 const DEMO = [
   { label: 'Super Admin', email: 'admin@corwado.org' },
@@ -15,17 +17,19 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@corwado.org');
-  const [password, setPassword] = useState('password123');
+  const [password, setPassword] = useState(DEFAULT_PASSWORD);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const activeSlide = LOGIN_SLIDES[slideIndex];
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/app/dashboard');
+      const loggedIn = await login(email, password);
+      navigate(homeRoute(loggedIn.role));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -35,13 +39,12 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left brand panel */}
-      <div
-        className="relative hidden w-1/2 flex-col justify-between p-12 text-white lg:flex"
-        style={{ background: 'linear-gradient(150deg,#0B7A3E 0%,#064a25 100%)' }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
+      {/* Left brand panel — farmer images as full background */}
+      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 text-white lg:flex">
+        <LoginFarmerSlider onActiveChange={setSlideIndex} />
+
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
             <Leaf size={24} />
           </div>
           <div>
@@ -49,11 +52,18 @@ export default function Login() {
             <div className="text-sm text-leaf-light">Digital Agriculture Platform</div>
           </div>
         </div>
-        <div>
-          <h1 className="text-4xl font-bold leading-tight">Empowering smallholder farmers across South Sudan</h1>
+
+        <div className="relative z-10 flex flex-1 flex-col justify-center py-6">
+          <h1 className="text-4xl font-bold leading-tight drop-shadow-sm">Empowering smallholder farmers across South Sudan</h1>
           <p className="mt-4 max-w-md text-leaf-light">
             Connecting farmers, extension workers, buyers and financial services through SMS, WhatsApp and a unified web platform.
           </p>
+
+          <p className="mt-6 max-w-md border-l-2 border-leaf-light/60 pl-4 text-sm text-white/80 transition-opacity duration-500">
+            <span className="block text-xs font-medium uppercase tracking-wider text-leaf-light">{activeSlide.location}</span>
+            {activeSlide.caption}
+          </p>
+
           <div className="mt-10 grid grid-cols-3 gap-6">
             {[
               ['1,000+', 'Farmers'],
@@ -67,7 +77,8 @@ export default function Login() {
             ))}
           </div>
         </div>
-        <p className="text-xs text-white/60">In partnership with the Norwegian Embassy & Ministry of Agriculture</p>
+
+        <p className="relative z-10 text-xs text-white/60">In partnership with the Norwegian Embassy & Ministry of Agriculture</p>
       </div>
 
       {/* Right form */}
@@ -92,14 +103,14 @@ export default function Login() {
           </form>
 
           <div className="mt-6">
-            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-slate-400">Quick demo login (password123)</p>
+            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-slate-400">Quick demo login ({DEFAULT_PASSWORD})</p>
             <div className="grid grid-cols-2 gap-2">
               {DEMO.map((d) => (
                 <button
                   key={d.email}
                   onClick={() => {
                     setEmail(d.email);
-                    setPassword('password123');
+                    setPassword(DEFAULT_PASSWORD);
                   }}
                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-forest hover:text-forest"
                 >
