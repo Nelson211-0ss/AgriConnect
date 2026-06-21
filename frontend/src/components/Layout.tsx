@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Users,
   UserCog,
+  UserPlus,
   BookOpen,
   LineChart,
   CloudSun,
@@ -34,14 +35,15 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/app/farmers', label: 'Farmers', icon: Users },
+  { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'extension_officer'] },
+  { to: '/app/farmers', label: 'Farmers', icon: Users, roles: ['super_admin', 'extension_officer'] },
+  { to: '/app/users', label: 'User Accounts', icon: UserPlus, roles: ['super_admin'] },
   { to: '/app/extension-workers', label: 'Extension Workers', icon: UserCog, roles: ['super_admin', 'extension_officer'] },
   { to: '/app/advisories', label: 'Advisories', icon: BookOpen },
   { to: '/app/market', label: 'Market Prices', icon: LineChart },
   { to: '/app/weather', label: 'Weather Alerts', icon: CloudSun },
   { to: '/app/pests', label: 'Pest Alerts', icon: Bug },
-  { to: '/app/marketplace', label: 'Buyer Marketplace', icon: Store },
+  { to: '/app/marketplace', label: 'Marketplace', icon: Store },
   { to: '/app/financial', label: 'Financial Services', icon: Wallet },
   { to: '/app/messaging', label: 'Messaging Center', icon: MessageSquare, roles: ['super_admin', 'extension_officer'] },
   { to: '/app/training', label: 'Training', icon: GraduationCap },
@@ -113,11 +115,11 @@ export function Layout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-mist">
+    <div className="box-border flex h-screen overflow-hidden bg-mist p-4 font-sans antialiased gap-4 md:gap-6 md:p-6 lg:p-8">
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'hidden md:flex flex-col bg-forest-800 transition-all duration-300',
+          'hidden md:flex shrink-0 flex-col bg-forest-800 transition-all duration-300',
           collapsed ? 'w-[76px]' : 'w-64'
         )}
         style={{ background: 'linear-gradient(180deg,#086030 0%,#064a25 100%)' }}
@@ -135,9 +137,9 @@ export function Layout() {
         </div>
       )}
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 md:px-6">
+        <header className="mb-4 flex h-16 shrink-0 items-center gap-3 border border-slate-200 bg-white px-4 md:mb-6 md:px-6">
           <button className="hidden md:inline-flex rounded-lg p-2 text-slate-500 hover:bg-slate-100" onClick={() => setCollapsed((c) => !c)}>
             <ChevronLeft size={20} className={cn('transition-transform', collapsed && 'rotate-180')} />
           </button>
@@ -170,7 +172,7 @@ export function Layout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto font-sans">
           <Outlet />
         </main>
       </div>

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
+import { config } from './config';
 import { pool, query, waitForDb } from './db';
 
 // ---------- random helpers ----------
@@ -86,7 +87,7 @@ export async function seed(force = false) {
     await query('INSERT INTO counties(name,lat,lng) VALUES($1,$2,$3) ON CONFLICT (name) DO NOTHING', [c.name, c.lat, c.lng]);
   }
 
-  const hash = await bcrypt.hash('password123', 10);
+  const hash = await bcrypt.hash(config.defaultPassword, 10);
 
   // Core demo accounts
   const demoAccounts = [
@@ -263,6 +264,48 @@ export async function seed(force = false) {
         phone(),
         Math.random() < 0.8 ? 'open' : 'closed',
         daysAgo(rand(0, 90)),
+      ]
+    );
+  }
+
+  // Farmer produce listings (with photos visible to buyers)
+  console.log('[seed] inserting farmer produce listings ...');
+  const demoFarmer = await query<{ id: number }>("SELECT id FROM users WHERE email='farmer@corwado.org'");
+  const demoFarmerId = demoFarmer.rows[0]?.id || null;
+  const PRODUCE_IMAGES: Record<string, string> = {
+    Maize: '/produce/maize.jpg',
+    Sorghum: '/produce/sorghum.jpg',
+    Groundnuts: '/produce/groundnuts.jpg',
+    Sesame: '/produce/sesame.jpg',
+    Cassava: '/produce/cassava.jpg',
+  };
+  const PRODUCE_DESCS: Record<string, string> = {
+    Maize: 'Freshly harvested, well-dried maize grain. Clean and ready for milling or storage.',
+    Sorghum: 'Locally grown red sorghum, sun-dried and sorted. Good for flour and brewing.',
+    Groundnuts: 'Quality groundnuts in shell, hand-sorted. Available in bulk bags.',
+    Sesame: 'Premium white sesame seed, cleaned and graded for export-quality buyers.',
+    Cassava: 'Fresh cassava tubers, recently harvested. Can supply dried chips on request.',
+  };
+  for (let i = 0; i < 24; i++) {
+    const commodity = pick(MARKET_COMMODITIES);
+    const county = pick(COUNTIES).name;
+    await query(
+      `INSERT INTO produce_listings(farmer_id,farmer_name,commodity,quantity,unit,price,county,location,contact_info,image_url,description,status,created_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [
+        Math.random() < 0.25 ? demoFarmerId : null,
+        `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`,
+        commodity,
+        rand(100, 8000),
+        'kg',
+        rand(180, 950),
+        county,
+        `${pick(PAYAMS)} Payam, ${county} County`,
+        phone(),
+        PRODUCE_IMAGES[commodity],
+        PRODUCE_DESCS[commodity],
+        Math.random() < 0.85 ? 'available' : 'sold',
+        daysAgo(rand(0, 60)),
       ]
     );
   }

@@ -54,7 +54,7 @@ export default function Dashboard() {
     api.get<DashboardData>('/dashboard').then(setData).catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <div className="rounded-xl bg-red-50 p-4 text-red-600">{error}</div>;
+  if (error) return <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-600">{error}</div>;
   if (!data)
     return (
       <div className="flex h-96 items-center justify-center">

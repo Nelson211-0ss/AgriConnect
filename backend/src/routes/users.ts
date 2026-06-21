@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { query } from '../db';
-import { asyncHandler, authenticate, authorize } from '../utils';
+import { config } from '../config';
+import { asyncHandler, authenticate, authorize, Role } from '../utils';
 
 const router = Router();
 router.use(authenticate);
@@ -37,15 +38,20 @@ router.post(
   authorize('super_admin'),
   asyncHandler(async (req, res) => {
     const { name, email, password, role, phone, county } = req.body || {};
-    if (!name || !email || !password || !role) return res.status(400).json({ message: 'name, email, password and role are required' });
+    if (!name || !email || !role) return res.status(400).json({ message: 'name, email and role are required' });
+    const allowed: Role[] = ['farmer', 'buyer', 'extension_officer'];
+    if (!allowed.includes(role as Role)) {
+      return res.status(400).json({ message: 'role must be farmer, buyer, or extension_officer' });
+    }
     const existing = await query('SELECT id FROM users WHERE email=$1', [String(email).toLowerCase()]);
     if (existing.rowCount > 0) return res.status(409).json({ message: 'Email already registered' });
-    const hash = await bcrypt.hash(password, 10);
+    const finalPassword = password || config.defaultPassword;
+    const hash = await bcrypt.hash(finalPassword, 10);
     const { rows } = await query(
       'INSERT INTO users(name,email,password_hash,role,phone,county) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,name,email,role,phone,county,status,created_at',
       [name, String(email).toLowerCase(), hash, role, phone || null, county || null]
     );
-    res.status(201).json(rows[0]);
+    res.status(201).json({ ...rows[0], defaultPassword: config.defaultPassword });
   })
 );
 

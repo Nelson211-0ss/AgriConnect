@@ -15,16 +15,8 @@ body,
 }
 
 body {
-  @apply bg-mist text-ink antialiased font-body;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  @apply font-display;
+  @apply bg-mist text-ink antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 ::-webkit-scrollbar {
@@ -41,5 +33,5 @@ h6 {
 
 .leaflet-container {
   font-family: inherit;
-  border-radius: 16px;
+  border-radius: 6px;
 }

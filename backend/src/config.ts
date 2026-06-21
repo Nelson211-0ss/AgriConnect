@@ -11,4 +11,6 @@ export const config = {
     'postgres://agriconnect:agriconnect@localhost:5432/agriconnect',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   seedOnStart: (process.env.SEED_ON_START || 'true').toLowerCase() === 'true',
+  /** Shared default password for all demo and admin-created accounts */
+  defaultPassword: process.env.DEFAULT_PASSWORD || 'password123',
 };

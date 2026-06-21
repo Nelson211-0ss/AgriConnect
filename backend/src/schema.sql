@@ -107,6 +107,32 @@ CREATE TABLE IF NOT EXISTS listing_interests (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS produce_listings (
+  id           SERIAL PRIMARY KEY,
+  farmer_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  farmer_name  TEXT,
+  commodity    TEXT NOT NULL,
+  quantity     DOUBLE PRECISION,
+  unit         TEXT DEFAULT 'kg',
+  price        NUMERIC(12,2),
+  county       TEXT,
+  location     TEXT,
+  contact_info TEXT,
+  image_url    TEXT,
+  description  TEXT,
+  status       TEXT NOT NULL DEFAULT 'available',
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS produce_interests (
+  id          SERIAL PRIMARY KEY,
+  listing_id  INTEGER REFERENCES produce_listings(id) ON DELETE CASCADE,
+  buyer_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  buyer_name  TEXT,
+  message     TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS financial_products (
   id            SERIAL PRIMARY KEY,
   name          TEXT NOT NULL,
