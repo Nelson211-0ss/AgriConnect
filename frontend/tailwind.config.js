@@ -24,7 +24,9 @@ export default {
         mist: '#F8FAFC',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['PT Sans', 'sans-serif'],
+        body: ['DM Sans', 'sans-serif'],
+        sans: ['DM Sans', 'sans-serif'],
       },
       boxShadow: {
         soft: '0 2px 12px rgba(16, 24, 40, 0.06)',

@@ -11,9 +11,11 @@ import {
   Store,
   ArrowRight,
   CheckCircle2,
-  Smartphone,
+  Mail,
+  MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { HeroMockups } from '@/components/HeroMockups';
 
 const FEATURES = [
   { icon: Users, title: 'Farmer Registry', desc: 'Digitally register and manage thousands of smallholder farmers across counties.' },
@@ -48,77 +50,49 @@ export default function Landing() {
             <a href="#impact" className="hover:text-forest">Impact</a>
             <a href="#partners" className="hover:text-forest">Partners</a>
           </nav>
-          <div className="flex items-center gap-2">
-            <Link to="/login">
-              <Button variant="ghost">Sign in</Button>
-            </Link>
-            <Link to="/login">
-              <Button>
-                Launch Platform <ArrowRight size={16} />
-              </Button>
-            </Link>
-          </div>
+          <Link to="/login">
+            <Button>Sign in</Button>
+          </Link>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 opacity-10" style={{ background: 'radial-gradient(circle at 80% 20%, #22C55E, transparent 50%)' }} />
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:py-24">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-forest-50 px-3 py-1 text-sm font-medium text-forest-700">
-              <span className="h-2 w-2 rounded-full bg-leaf" /> Pilot-ready digital extension platform
+      <section className="relative flex min-h-[88vh] items-center overflow-x-hidden bg-gradient-to-br from-forest-50 via-white to-mist">
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            background: `
+              radial-gradient(ellipse 70% 55% at 85% 15%, rgba(34, 197, 94, 0.18), transparent),
+              radial-gradient(ellipse 50% 45% at 5% 90%, rgba(11, 122, 62, 0.1), transparent),
+              radial-gradient(ellipse 40% 35% at 50% 50%, rgba(209, 250, 223, 0.5), transparent)
+            `,
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.35]"
+          aria-hidden
+          style={{
+            backgroundImage: 'radial-gradient(circle, #0B7A3E 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-white" aria-hidden />
+
+        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 pb-20 lg:grid-cols-2 lg:gap-16 lg:py-20 lg:pb-24">
+          <div className="text-center lg:text-left">
+            <span className="inline-flex items-center gap-2 rounded-full border border-forest-100 bg-white/70 px-3 py-1 text-sm font-medium text-forest-700 shadow-soft backdrop-blur-sm">
+              <span className="h-2 w-2 rounded-full bg-leaf" /> Digital extension for South Sudan
             </span>
-            <h1 className="mt-5 text-4xl font-extrabold leading-tight text-ink lg:text-5xl">
-              Connecting South Sudan's farmers to <span className="text-forest">knowledge, markets & finance</span>
+            <h1 className="mt-6 text-4xl font-extrabold leading-tight text-ink lg:text-5xl xl:text-[3.25rem]">
+              Empowering Farmers With <span className="text-forest">Knowledge & Markets</span>
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-slate-600">
-              AgriConnect unifies farmer registration, climate-smart advisories, market prices, weather and pest alerts, and mobile messaging — one platform for extension at scale.
+            <p className="mx-auto mt-5 max-w-lg text-lg leading-relaxed text-slate-600 lg:mx-0">
+              One platform for registration, advisories, market prices, and farmer outreach.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/login">
-                <Button size="lg">
-                  Explore the Dashboard <ArrowRight size={18} />
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button size="lg" variant="outline">
-                  Register as Farmer / Buyer
-                </Button>
-              </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm text-slate-600">
-              {['SMS & WhatsApp ready', 'Works on any phone', 'Multi-county coverage'].map((t) => (
-                <span key={t} className="inline-flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-forest" /> {t}
-                </span>
-              ))}
-            </div>
           </div>
 
-          <div className="relative">
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                ['1,000+', 'Registered Farmers', 'bg-forest text-white'],
-                ['5', 'Counties Covered', 'bg-white text-ink border border-slate-100'],
-                ['50+', 'Extension Officers', 'bg-white text-ink border border-slate-100'],
-                ['100+', 'Active Buyers', 'bg-accent text-white'],
-              ].map(([n, l, c]) => (
-                <div key={l} className={`rounded-2xl p-6 shadow-card ${c}`}>
-                  <div className="text-3xl font-extrabold">{n}</div>
-                  <div className="mt-1 text-sm opacity-90">{l}</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-card">
-              <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-                <Smartphone size={16} className="text-forest" /> SMS Alert Preview
-              </div>
-              <p className="mt-2 rounded-xl bg-mist p-3 text-sm text-slate-600">
-                "Heavy rains expected in Wau County from 28–30 May. Prepare drainage channels and protect stored produce."
-              </p>
-            </div>
-          </div>
+          <HeroMockups />
         </div>
       </section>
 
@@ -202,11 +176,66 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="bg-forest-800 py-10 text-center text-sm text-forest-50/70" style={{ background: '#064a25' }}>
-        <div className="flex items-center justify-center gap-2 text-white">
-          <Leaf size={18} /> <span className="font-semibold">CORWADO AgriConnect</span>
+      <footer className="text-forest-50/80" style={{ background: '#064a25' }}>
+        <div className="mx-auto max-w-7xl px-6 py-14">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center gap-2.5 text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                  <Leaf size={20} />
+                </div>
+                <span className="font-semibold">CORWADO AgriConnect</span>
+              </div>
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-forest-50/70">
+                A digital agricultural extension platform connecting smallholder farmers to climate-smart advice, market information, and financial services across South Sudan.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Platform</h4>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li><a href="#features" className="hover:text-white">Features</a></li>
+                <li><a href="#impact" className="hover:text-white">Impact</a></li>
+                <li><a href="#partners" className="hover:text-white">Partners</a></li>
+                <li><Link to="/login" className="hover:text-white">Sign in</Link></li>
+                <li><Link to="/register" className="hover:text-white">Register</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Modules</h4>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li>Farmer Registry</li>
+                <li>Market Prices</li>
+                <li>Weather & Pest Alerts</li>
+                <li>SMS & WhatsApp</li>
+                <li>Training & Finance</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Contact</h4>
+              <ul className="mt-4 space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <MapPin size={16} className="mt-0.5 shrink-0 text-leaf-light" />
+                  <span>Juba, South Sudan</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Mail size={16} className="mt-0.5 shrink-0 text-leaf-light" />
+                  <span>info@corwado.org</span>
+                </li>
+              </ul>
+              <p className="mt-4 text-xs text-forest-50/50">Supported by development partners and the Ministry of Agriculture.</p>
+            </div>
+          </div>
         </div>
-        <p className="mt-2">© {new Date().getFullYear()} CORWADO South Sudan. Digital Agricultural Extension Platform.</p>
+
+        <div className="border-t border-white/10">
+          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-5 text-xs text-forest-50/50 sm:flex-row">
+            <p>© {new Date().getFullYear()} CORWADO South Sudan. All rights reserved.</p>
+            <p>Digital Agricultural Extension Platform</p>
+          </div>
+        </div>
       </footer>
     </div>
   );
