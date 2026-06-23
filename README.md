@@ -100,7 +100,7 @@ npm run dev               # starts API on http://localhost:4000 and seeds data
 ```bash
 cd frontend
 npm install
-npm run dev               # starts Vite on http://localhost:5173 (proxies /api to :4000)
+npm run dev               # starts Vite on http://localhost:5173 (proxies /api — see frontend/.env.development)
 ```
 
 Open http://localhost:5173.

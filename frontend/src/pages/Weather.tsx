@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
 import { Plus, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, CloudLightning, AlertTriangle, RefreshCw, Store, LineChart, BookOpen, Bug, Wallet, GraduationCap } from 'lucide-react';
@@ -76,6 +76,19 @@ function toChartForecast(forecast: Forecast[]) {
   return forecast.map((f) => ({ ...f, label: shortForecastLabel(f) }));
 }
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [query]);
+  return matches;
+}
+
 function Metric({ icon, val, label }: { icon: React.ReactNode; val: string; label: string }) {
   return (
     <div className="rounded-xl bg-mist p-3 dark:bg-slate-800">
@@ -88,6 +101,7 @@ function Metric({ icon, val, label }: { icon: React.ReactNode; val: string; labe
 
 export default function Weather() {
   const { user } = useAuth();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const chart = useChartTheme();
   const canEdit = user?.role === 'super_admin' || user?.role === 'extension_officer';
   const [data, setData] = useState<WeatherData | null>(null);
@@ -96,56 +110,103 @@ export default function Weather() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ type: 'Heavy Rain', county: 'Juba', severity: 'high', message: '' });
 
-  const load = async (showSpinner = false) => {
+  const load = useCallback(async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
     else setLoading(true);
     setError('');
     try {
       const result = await api.get<WeatherData>('/weather');
+      if (!result.current?.length) {
+        throw new Error('No weather data available for any county');
+      }
       setData(result);
+      setSelected((prev) => Math.min(prev, result.current.length - 1));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const save = async () => {
-    await api.post('/weather/alerts', form);
-    setOpen(false);
-    setForm({ type: 'Heavy Rain', county: 'Juba', severity: 'high', message: '' });
-    load(true);
+    setSaveError('');
+    setSaving(true);
+    try {
+      await api.post('/weather/alerts', form);
+      setOpen(false);
+      setForm({ type: 'Heavy Rain', county: 'Juba', severity: 'high', message: '' });
+      await load(true);
+    } catch (e) {
+      setSaveError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const mobileHeaderAction = canEdit ? (
+    <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
+      <Plus size={14} />
+    </Button>
+  ) : (
+    <button type="button" onClick={() => load(true)} className="rounded-lg bg-white/15 p-2" aria-label="Refresh weather">
+      <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+    </button>
+  );
 
   if (loading && !data) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <Spinner className="h-8 w-8" />
+      <div className="animate-fade-in">
+        <MobileShell>
+          <MobilePageHeader title="Weather" subtitle="Loading live forecast…" />
+          <div className="flex flex-1 items-center justify-center py-24">
+            <Spinner className="h-8 w-8" />
+          </div>
+        </MobileShell>
+        <div className="hidden md:flex md:h-96 md:items-center md:justify-center">
+          <Spinner className="h-8 w-8" />
+        </div>
       </div>
     );
   }
 
   if (error && !data) {
     return (
-      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
-        {error}
-        <Button className="mt-3" size="sm" onClick={() => load()}>
-          Retry
-        </Button>
+      <div className="animate-fade-in">
+        <MobileShell>
+          <MobilePageHeader title="Weather" subtitle="Unable to load data" action={mobileHeaderAction} />
+          <MobileContent>
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+              {error}
+            </div>
+            <Button onClick={() => load()} className="w-full">
+              Retry
+            </Button>
+          </MobileContent>
+        </MobileShell>
+        <div className="hidden md:block">
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+            {error}
+            <Button className="mt-3" size="sm" onClick={() => load()}>
+              Retry
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!data) return null;
+  if (!data?.current?.length) return null;
 
-  const cur = data.current[selected];
+  const cur = data.current[selected] ?? data.current[0];
   const forecast = cur.forecast ?? [];
   const chartForecast = toChartForecast(forecast);
   const CondIcon = condIcon(cur.condition);
@@ -174,17 +235,7 @@ export default function Weather() {
         <MobilePageHeader
           title="Weather"
           subtitle={mobileSubtitle}
-          action={
-            canEdit ? (
-              <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Plus size={14} />
-              </Button>
-            ) : (
-              <button type="button" onClick={() => load(true)} className="rounded-lg bg-white/15 p-2">
-                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-              </button>
-            )
-          }
+          action={mobileHeaderAction}
         />
         <MobileToolbar>
           <MobileChipRow
@@ -284,7 +335,8 @@ export default function Weather() {
         </MobileContent>
       </MobileShell>
 
-      <div className="hidden md:block">
+      {isDesktop && (
+      <div className="space-y-4">
       <PageHeader
         title="Weather Intelligence"
         subtitle={
@@ -440,8 +492,9 @@ export default function Weather() {
         </CardBody>
       </Card>
       </div>
+      )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Issue Weather Alert">
+      <Modal open={open} onClose={() => { setOpen(false); setSaveError(''); }} title="Issue Weather Alert">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Select label="Alert Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
@@ -461,12 +514,15 @@ export default function Weather() {
             ))}
           </Select>
           <Textarea label="Message" rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          {saveError && (
+            <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-300">{saveError}</div>
+          )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => { setOpen(false); setSaveError(''); }}>
               Cancel
             </Button>
-            <Button onClick={save} disabled={!form.message}>
-              Issue Alert
+            <Button onClick={save} disabled={!form.message.trim() || saving}>
+              {saving ? <Spinner className="h-4 w-4" /> : 'Issue Alert'}
             </Button>
           </div>
         </div>
