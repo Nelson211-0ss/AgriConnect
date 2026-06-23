@@ -50,18 +50,18 @@ export default function Financial() {
           <>
             <span className="block truncate">{p.provider}</span>
             {p.interest_rate > 0 && (
-              <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-forest-50 px-2 py-0.5 text-[11px] font-semibold text-forest-700 dark:bg-forest-800/30 dark:text-leaf">
+              <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold text-white">
                 <Percent size={10} /> {p.interest_rate}% APR
               </span>
             )}
             <p className="mt-1 line-clamp-2">{p.description}</p>
-            <p className="mt-1 font-medium text-ink">
+            <p className="mt-1 font-medium text-white">
               {SSP(p.min_amount)} – {SSP(p.max_amount)}
             </p>
           </>
         }
         right={
-          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-forest dark:text-leaf">
+          <span className="inline-flex items-center gap-0.5 text-xs font-medium text-white">
             <ArrowRight size={14} />
           </span>
         }

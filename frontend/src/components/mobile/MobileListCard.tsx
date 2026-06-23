@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { itemCardMuted, itemCardShell, itemCardTitle } from './itemCardTheme';
 
 export function MobileListCard({
   icon: Icon,
@@ -25,7 +26,8 @@ export function MobileListCard({
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'w-full rounded-2xl bg-surface p-3 text-left shadow-soft dark:bg-surface-elevated',
+        'w-full rounded-2xl border p-3 text-left',
+        itemCardShell,
         onClick && 'transition active:scale-[0.99]',
         className
       )}
@@ -33,17 +35,37 @@ export function MobileListCard({
       <div className="flex gap-3">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white sm:h-11 sm:w-11"
-          style={{ background: iconBg || '#0B7A3E' }}
+          style={{ background: iconBg || 'rgba(255,255,255,0.15)' }}
         >
           <Icon size={18} className="sm:hidden" />
           <Icon size={20} className="hidden sm:block" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <p className="line-clamp-2 font-semibold leading-snug text-ink">{title}</p>
-            {right && <div className="shrink-0">{right}</div>}
+            <p className={cn('line-clamp-2 font-semibold leading-snug', itemCardTitle)}>{title}</p>
+            {right && (
+              <div
+                className={cn(
+                  'shrink-0',
+                  itemCardTitle,
+                  '[&_.text-ink]:text-white [&_.text-content-muted]:text-white/75 [&_.inline-flex]:!bg-white/20 [&_.inline-flex]:!text-white'
+                )}
+              >
+                {right}
+              </div>
+            )}
           </div>
-          {subtitle && <div className="mt-1 text-xs leading-relaxed text-content-muted">{subtitle}</div>}
+          {subtitle && (
+            <div
+              className={cn(
+                'mt-1 text-xs leading-relaxed',
+                itemCardMuted,
+                '[&_.text-content-faint]:text-white/60 [&_.text-forest]:text-leaf-light [&_.text-forest-700]:text-white [&_.text-leaf]:text-leaf-light'
+              )}
+            >
+              {subtitle}
+            </div>
+          )}
         </div>
       </div>
     </Tag>

@@ -3,7 +3,7 @@ import { Plus, MapPin, Phone, Package, Trash2, HandHeart, Sprout, ShoppingCart, 
 import { api } from '@/lib/api';
 import { Button, Card, CardBody, Input, Select, Textarea, Modal, Badge, Spinner, EmptyState } from '@/components/ui';
 import { PageHeader } from '@/components/common';
-import { MobileShell, MobilePageHeader, MobileToolbar, MobileContent } from '@/components/mobile';
+import { MobileShell, MobilePageHeader, MobileToolbar, MobileContent, itemCardPanel, itemCardShell, itemCardLabel, itemCardValue, itemCardMuted, itemCardFaint, itemCardDivider } from '@/components/mobile';
 import { useAuth } from '@/context/AuthContext';
 import { SSP, formatNumber, timeAgo, fileToCompressedDataUrl, cn } from '@/lib/utils';
 
@@ -59,6 +59,9 @@ const COMMODITY_IMAGE: Record<string, string> = {
 };
 
 const produceImage = (l: ProduceListing) => l.image_url || COMMODITY_IMAGE[l.commodity] || COMMODITY_IMAGE.Maize;
+
+const itemDetailsPanel = itemCardPanel;
+const itemDetailsCard = itemCardShell;
 
 export default function Marketplace() {
   const { user } = useAuth();
@@ -348,16 +351,16 @@ function ProduceTab({
                       </div>
                     </div>
                   </div>
-                  <CardBody className="space-y-3 pt-3">
-                    {l.description && <p className="line-clamp-2 text-sm text-content-muted">{l.description}</p>}
+                  <CardBody className={cn('space-y-3 pt-3', itemDetailsPanel)}>
+                    {l.description && <p className={cn('line-clamp-2 text-sm', itemCardMuted)}>{l.description}</p>}
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                      <span className="text-content-muted">Quantity</span>
-                      <span className="text-right font-medium text-ink">{formatNumber(l.quantity)} {l.unit}</span>
-                      <span className="text-content-muted">Location</span>
-                      <span className="truncate text-right text-ink">{l.location || l.county}</span>
+                      <span className={itemCardLabel}>Quantity</span>
+                      <span className={cn('text-right', itemCardValue)}>{formatNumber(l.quantity)} {l.unit}</span>
+                      <span className={itemCardLabel}>Location</span>
+                      <span className={cn('truncate text-right', itemCardValue)}>{l.location || l.county}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 border-t border-line pt-3 dark:border-line">
-                      <span className="text-[11px] text-content-faint">{l.interests} interested</span>
+                    <div className={cn('flex items-center justify-between gap-2 border-t pt-3', itemCardDivider)}>
+                      <span className={cn('text-[11px]', itemCardFaint)}>{l.interests} interested</span>
                       <div className="flex shrink-0 items-center gap-1">
                         {canBuy && l.status === 'available' && (
                           <Button size="sm" variant="outline" onClick={() => showInterest(l.id)}>
@@ -365,7 +368,7 @@ function ProduceTab({
                           </Button>
                         )}
                         {canDelete && (
-                          <button type="button" onClick={() => remove(l.id)} className="rounded-md p-1.5 text-content-muted hover:bg-red-50 hover:text-red-600">
+                          <button type="button" onClick={() => remove(l.id)} className="rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-red-200">
                             <Trash2 size={15} />
                           </button>
                         )}
@@ -421,23 +424,23 @@ function ProduceTab({
                 </div>
               </div>
 
-              <CardBody className="flex flex-1 flex-col pt-4">
-                {l.description && <p className="line-clamp-2 text-sm text-content-muted">{l.description}</p>}
+              <CardBody className={cn('flex flex-1 flex-col pt-4', itemDetailsPanel)}>
+                {l.description && <p className={cn('line-clamp-2 text-sm', itemCardMuted)}>{l.description}</p>}
                 <div className="mt-3 space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Quantity</span>
-                    <span className="font-medium text-ink">{formatNumber(l.quantity)} {l.unit}</span>
+                    <span className={itemCardLabel}>Quantity</span>
+                    <span className={itemCardValue}>{formatNumber(l.quantity)} {l.unit}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-slate-500">
-                    <MapPin size={13} className="text-forest" /> {l.location || l.county}
+                  <div className={cn('flex items-center gap-1', itemCardMuted)}>
+                    <MapPin size={13} className="text-leaf-light" /> {l.location || l.county}
                   </div>
-                  <div className="flex items-center gap-1 text-slate-500">
+                  <div className={cn('flex items-center gap-1', itemCardMuted)}>
                     <Phone size={13} /> {l.contact_info}
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-line-subtle pt-3 dark:border-line">
-                  <span className="text-xs text-slate-400">{l.interests} interested · {timeAgo(l.created_at)}</span>
+                <div className={cn('mt-4 flex items-center justify-between border-t pt-3', itemCardDivider)}>
+                  <span className={cn('text-xs', itemCardFaint)}>{l.interests} interested · {timeAgo(l.created_at)}</span>
                   <div className="flex items-center gap-1">
                     {canBuy && l.status === 'available' && (
                       <Button size="sm" variant="outline" onClick={() => showInterest(l.id)}>
@@ -445,7 +448,7 @@ function ProduceTab({
                       </Button>
                     )}
                     {canDelete && (
-                      <button onClick={() => remove(l.id)} className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600">
+                      <button onClick={() => remove(l.id)} className="rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-red-200">
                         <Trash2 size={15} />
                       </button>
                     )}
@@ -664,30 +667,30 @@ function DemandTab({
           ) : (
             <div className="space-y-3">
               {rows.map((l) => (
-                <Card key={l.id} className="shadow-soft">
+                <Card key={l.id} className={cn('overflow-hidden border', itemDetailsCard)}>
                   <CardBody className="space-y-3 pt-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
                           <Package size={18} />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="truncate font-bold text-ink">{l.commodity}</h3>
-                          <p className="truncate text-xs text-content-muted">{l.buyer_name}</p>
+                          <h3 className={cn('truncate font-bold', itemCardValue)}>{l.commodity}</h3>
+                          <p className={cn('truncate text-xs', itemCardMuted)}>{l.buyer_name}</p>
                         </div>
                       </div>
-                      <Badge tone={l.status === 'open' ? 'green' : 'gray'}>{l.status}</Badge>
+                      <Badge tone={l.status === 'open' ? 'green' : 'gray'} className="bg-white/20 text-white">{l.status}</Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
-                      <span className="text-content-muted">Quantity</span>
-                      <span className="text-right font-medium text-ink">{formatNumber(l.quantity)} {l.unit}</span>
-                      <span className="text-content-muted">Price</span>
-                      <span className="text-right font-semibold text-forest">{SSP(l.price)}/{l.unit}</span>
-                      <span className="text-content-muted">Delivery</span>
-                      <span className="truncate text-right text-ink">{l.delivery_location}</span>
+                      <span className={itemCardLabel}>Quantity</span>
+                      <span className={cn('text-right', itemCardValue)}>{formatNumber(l.quantity)} {l.unit}</span>
+                      <span className={itemCardLabel}>Price</span>
+                      <span className={cn('text-right font-semibold text-leaf-light')}>{SSP(l.price)}/{l.unit}</span>
+                      <span className={itemCardLabel}>Delivery</span>
+                      <span className={cn('truncate text-right', itemCardValue)}>{l.delivery_location}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 border-t border-line pt-3 dark:border-line">
-                      <span className="text-[11px] text-content-faint">{l.interests} interested</span>
+                    <div className={cn('flex items-center justify-between gap-2 border-t pt-3', itemCardDivider)}>
+                      <span className={cn('text-[11px]', itemCardFaint)}>{l.interests} interested</span>
                       <div className="flex shrink-0 items-center gap-1">
                         {canShowInterest && (
                           <Button size="sm" variant="outline" onClick={() => expressInterest(l.id)}>
@@ -695,7 +698,7 @@ function DemandTab({
                           </Button>
                         )}
                         {canDelete && (
-                          <button type="button" onClick={() => remove(l.id)} className="rounded-md p-1.5 text-content-muted hover:bg-red-50 hover:text-red-600">
+                          <button type="button" onClick={() => remove(l.id)} className="rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-red-200">
                             <Trash2 size={15} />
                           </button>
                         )}
@@ -728,36 +731,36 @@ function DemandTab({
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {rows.map((l) => (
-            <Card key={l.id} className="flex flex-col transition hover:shadow-card">
+            <Card key={l.id} className={cn('flex flex-col overflow-hidden border transition hover:shadow-card', itemDetailsCard)}>
               <CardBody className="flex flex-1 flex-col pt-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-accent/10 text-accent">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white/15 text-white">
                     <Package size={20} />
                   </div>
-                  <Badge tone={l.status === 'open' ? 'green' : 'gray'}>{l.status}</Badge>
+                  <Badge tone={l.status === 'open' ? 'green' : 'gray'} className="bg-white/20 text-white">{l.status}</Badge>
                 </div>
-                <h3 className="text-lg font-bold text-ink">{l.commodity}</h3>
-                <p className="text-sm text-slate-500">{l.buyer_name}</p>
+                <h3 className={cn('text-lg font-bold', itemCardValue)}>{l.commodity}</h3>
+                <p className={cn('text-sm', itemCardMuted)}>{l.buyer_name}</p>
 
                 <div className="mt-3 space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Quantity</span>
-                    <span className="font-medium text-ink">{formatNumber(l.quantity)} {l.unit}</span>
+                    <span className={itemCardLabel}>Quantity</span>
+                    <span className={itemCardValue}>{formatNumber(l.quantity)} {l.unit}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Offer Price</span>
-                    <span className="font-semibold text-forest">{SSP(l.price)}/{l.unit}</span>
+                    <span className={itemCardLabel}>Offer Price</span>
+                    <span className="font-semibold text-leaf-light">{SSP(l.price)}/{l.unit}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-slate-500">
-                    <MapPin size={13} className="text-forest" /> {l.delivery_location}
+                  <div className={cn('flex items-center gap-1', itemCardMuted)}>
+                    <MapPin size={13} className="text-leaf-light" /> {l.delivery_location}
                   </div>
-                  <div className="flex items-center gap-1 text-slate-500">
+                  <div className={cn('flex items-center gap-1', itemCardMuted)}>
                     <Phone size={13} /> {l.contact_info}
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-line-subtle pt-3 dark:border-line">
-                  <span className="text-xs text-slate-400">{l.interests} interested · {timeAgo(l.created_at)}</span>
+                <div className={cn('mt-4 flex items-center justify-between border-t pt-3', itemCardDivider)}>
+                  <span className={cn('text-xs', itemCardFaint)}>{l.interests} interested · {timeAgo(l.created_at)}</span>
                   <div className="flex items-center gap-1">
                     {canShowInterest && (
                       <Button size="sm" variant="outline" onClick={() => expressInterest(l.id)}>
@@ -765,7 +768,7 @@ function DemandTab({
                       </Button>
                     )}
                     {canDelete && (
-                      <button onClick={() => remove(l.id)} className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600">
+                      <button onClick={() => remove(l.id)} className="rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-red-200">
                         <Trash2 size={15} />
                       </button>
                     )}

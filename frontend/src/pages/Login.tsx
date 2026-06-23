@@ -42,47 +42,49 @@ export default function Login() {
   return (
     <div className="flex min-h-[100dvh]">
       {/* Left brand panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-10 text-white xl:p-12 lg:flex">
+      <div className="relative hidden min-h-[100dvh] w-1/2 overflow-hidden lg:flex">
         <LoginFarmerSlider onActiveChange={setSlideIndex} />
 
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-            <Leaf size={24} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-lg font-bold leading-tight">CORWADO AgriConnect</div>
-            <div className="text-sm text-leaf-light">Digital Agriculture Platform</div>
-          </div>
-        </div>
-
-        <div className="relative z-10 flex flex-1 flex-col justify-center py-8">
-          <h1 className="max-w-lg text-4xl font-bold leading-tight drop-shadow-sm xl:text-[2.75rem] xl:leading-tight">
-            Empowering smallholder farmers across South Sudan
-          </h1>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-leaf-light">
-            Connecting farmers, extension workers, buyers and financial services through SMS, WhatsApp and a unified web platform.
-          </p>
-
-          <blockquote className="mt-8 max-w-md border-l-2 border-leaf-light/60 pl-4 text-sm leading-relaxed text-white/85 transition-opacity duration-500">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-leaf-light">{activeSlide.location}</span>
-            {activeSlide.caption}
-          </blockquote>
-
-          <div className="mt-10 grid max-w-md grid-cols-3 gap-4 sm:gap-6">
-            {[
-              ['1,000+', 'Farmers'],
-              ['5', 'Counties'],
-              ['50+', 'Officers'],
-            ].map(([n, l]) => (
-              <div key={l}>
-                <div className="text-2xl font-bold sm:text-3xl">{n}</div>
-                <div className="mt-0.5 text-sm text-leaf-light">{l}</div>
+        <div className="absolute inset-0 z-10 flex items-center justify-center px-10 py-16 text-white xl:px-12">
+          <div className="w-full max-w-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+                <Leaf size={24} />
               </div>
-            ))}
+              <div className="min-w-0">
+                <div className="text-lg font-bold leading-tight">CORWADO AgriConnect</div>
+                <div className="text-sm leading-snug text-leaf-light">Digital Agriculture Platform</div>
+              </div>
+            </div>
+
+            <h1 className="mt-4 text-4xl font-bold leading-snug drop-shadow-sm xl:text-[2.75rem] xl:leading-snug">
+              Empowering smallholder farmers across South Sudan
+            </h1>
+            <p className="mt-2 text-base leading-snug text-leaf-light">
+              Connecting farmers, extension workers, buyers and financial services through SMS, WhatsApp and a unified web platform.
+            </p>
+
+            <blockquote className="mt-4 border-l-2 border-leaf-light/60 pl-4 text-sm leading-snug text-white/85 transition-opacity duration-500">
+              <span className="mb-0.5 block text-xs font-medium uppercase tracking-wider text-leaf-light">{activeSlide.location}</span>
+              {activeSlide.caption}
+            </blockquote>
+
+            <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-4">
+              {[
+                ['1,000+', 'Farmers'],
+                ['5', 'Counties'],
+                ['50+', 'Officers'],
+              ].map(([n, l]) => (
+                <div key={l}>
+                  <div className="text-2xl font-bold leading-none sm:text-3xl">{n}</div>
+                  <div className="mt-0.5 text-sm leading-snug text-leaf-light">{l}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <p className="relative z-10 text-xs leading-relaxed text-white/60">
+        <p className="absolute bottom-10 left-10 right-10 z-10 text-xs leading-relaxed text-white/60 xl:left-12 xl:right-12">
           In partnership with the Norwegian Embassy &amp; Ministry of Agriculture
         </p>
       </div>
