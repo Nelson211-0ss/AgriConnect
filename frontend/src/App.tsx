@@ -23,6 +23,11 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import MobileApp from './pages/MobileApp';
 import MapsView from './pages/MapsView';
+import Cooperatives from './pages/Cooperatives';
+import Knowledge from './pages/Knowledge';
+import Directory from './pages/Directory';
+import AuditLogs from './pages/AuditLogs';
+import Cms from './pages/Cms';
 
 function Protected({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -79,6 +84,25 @@ export default function App() {
         <Route path="training" element={<Training />} />
         <Route path="reports" element={<Reports />} />
         <Route path="maps" element={<MapsView />} />
+        <Route path="cooperatives" element={<Cooperatives />} />
+        <Route path="knowledge" element={<Knowledge />} />
+        <Route path="directory" element={<Directory />} />
+        <Route
+          path="audit"
+          element={
+            <RoleGuard allow={['super_admin', 'extension_officer']}>
+              <AuditLogs />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="cms"
+          element={
+            <RoleGuard allow={['super_admin', 'extension_officer', 'digital_champion']}>
+              <Cms />
+            </RoleGuard>
+          }
+        />
         <Route path="mobile" element={<MobileApp />} />
         <Route path="settings" element={<Settings />} />
       </Route>

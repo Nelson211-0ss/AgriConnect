@@ -67,10 +67,13 @@ function phone() {
   return '+211 9' + rand(10, 99) + ' ' + rand(100, 999) + ' ' + rand(100, 999);
 }
 
+import { runMigrations } from './migrations';
+
 export async function runSchema() {
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   await pool.query(schema);
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT');
+  await runMigrations();
   console.log('[seed] schema ensured');
 }
 
@@ -79,6 +82,7 @@ export async function seed(force = false) {
   const existing = await query<{ count: string }>('SELECT count(*)::text AS count FROM users');
   if (!force && parseInt(existing.rows[0].count, 10) > 0) {
     console.log('[seed] database already seeded, skipping');
+    await seedExtensions();
     return;
   }
   console.log('[seed] generating demo data ...');
@@ -425,6 +429,62 @@ export async function seed(force = false) {
   );
 
   console.log('[seed] done.');
+  await seedExtensions();
+}
+
+async function seedExtensions() {
+  const kb = await query<{ c: string }>('SELECT count(*)::text c FROM kb_items');
+  if (parseInt(kb.rows[0].c, 10) === 0) {
+    console.log('[seed] seeding knowledge base, directory, cooperatives ...');
+    const kbItems = [
+      { type: 'faq', title: 'How do I register as a farmer?', category: 'Registration', content: 'Visit your nearest extension office or register via the AgriConnect app with your phone number and location.' },
+      { type: 'guide', title: 'Maize planting guide', category: 'Crop Production', content: 'Prepare land, use certified seed, plant at 75cm x 25cm spacing, apply fertilizer at planting and top-dress at 4 weeks.' },
+      { type: 'video', title: 'Drip irrigation setup', category: 'Irrigation', content: 'Step-by-step video on low-cost drip irrigation for smallholders.', media_url: 'https://example.com/videos/drip-irrigation.mp4' },
+      { type: 'audio', title: 'Pest alert: Fall Armyworm', category: 'Pest Control', content: 'Audio lesson on identifying and managing Fall Armyworm in maize fields.', media_url: 'https://example.com/audio/faw-lesson.mp3' },
+      { type: 'pdf', title: 'Climate Smart Agriculture handbook', category: 'Climate', content: 'PDF resource covering conservation agriculture, agroforestry and drought-tolerant varieties.', pdf_url: 'https://example.com/docs/csa-handbook.pdf' },
+    ];
+    for (const item of kbItems) {
+      await query('INSERT INTO kb_items(type,title,content,category,media_url,pdf_url,status) VALUES($1,$2,$3,$4,$5,$6,$7)', [item.type, item.title, item.content, item.category, item.media_url || null, item.pdf_url || null, 'published']);
+    }
+
+    const dirEntries = [
+      { entry_type: 'buyer', company_name: 'Twiga Foods Ltd', county: 'Juba', products: ['Maize', 'Sorghum'], phone: '+211 912 345 678', verified: true },
+      { entry_type: 'processor', company_name: 'South Sudan Grain Millers', county: 'Wau', products: ['Maize', 'Wheat'], phone: '+211 923 456 789', verified: true },
+      { entry_type: 'exporter', company_name: 'Nile Commodities Export', county: 'Juba', products: ['Sesame', 'Groundnuts'], phone: '+211 934 567 890', verified: false },
+      { entry_type: 'agro_dealer', company_name: 'Green Valley Agro Supplies', county: 'Bor', products: ['Seeds', 'Fertilizer', 'Tools'], phone: '+211 945 678 901', verified: true },
+      { entry_type: 'input_supplier', company_name: 'Equator Seed Company', county: 'Juba', products: ['Certified Seed'], phone: '+211 956 789 012', verified: true },
+      { entry_type: 'transporter', company_name: 'Rift Valley Logistics', county: 'Rumbek', services: ['Grain transport', 'Cold chain'], phone: '+211 967 890 123', verified: true },
+      { entry_type: 'bank', company_name: 'Equity Bank South Sudan', county: 'Juba', services: ['Agricultural loans', 'Savings'], phone: '+211 978 901 234', verified: true },
+      { entry_type: 'microfinance', company_name: 'Kush Microfinance', county: 'Wau', services: ['Micro loans', 'VSLA support'], phone: '+211 989 012 345', verified: true },
+      { entry_type: 'sacco', company_name: 'CORWADO Farmer SACCO', county: 'Juba', services: ['Group savings', 'Credit'], phone: '+211 990 123 456', verified: true },
+      { entry_type: 'insurance', company_name: 'Pula Agricultural Insurance', county: 'Juba', services: ['Weather index insurance', 'Livestock cover'], phone: '+211 901 234 567', verified: true },
+    ];
+    for (const e of dirEntries) {
+      await query(
+        'INSERT INTO directory_entries(entry_type,company_name,county,phone,products,services,verified,status,gps_lat,gps_lng) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+        [e.entry_type, e.company_name, e.county, e.phone, e.products || [], e.services || [], e.verified, 'active', 4.85 + Math.random() * 0.5, 31.58 + Math.random() * 0.5]
+      );
+    }
+
+    const coops = [
+      { name: 'Juba Maize Growers Cooperative', org_type: 'cooperative', county: 'Juba', member_count: 120 },
+      { name: 'Wau Women Farmers VSLA', org_type: 'vsla', county: 'Wau', member_count: 25 },
+      { name: 'Bor Sorghum Producers Union', org_type: 'cooperative', county: 'Bor', member_count: 85 },
+      { name: 'Aweil Groundnut VSLA', org_type: 'vsla', county: 'Aweil', member_count: 30 },
+    ];
+    for (const c of coops) {
+      const { rows } = await query(
+        'INSERT INTO cooperatives(name,org_type,county,member_count,leader_name,leader_phone,description,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
+        [c.name, c.org_type, c.county, c.member_count, 'Group Leader', phone(), `${c.name} — registered with CORWADO AgriConnect`, 'active']
+      );
+      await query('INSERT INTO cooperative_announcements(cooperative_id,title,body) VALUES($1,$2,$3)', [rows[0].id, 'Welcome members', 'Monthly meeting scheduled. Please attend to discuss aggregation plans.']);
+    }
+
+    await query('INSERT INTO market_demand(commodity,buyer_name,quantity,unit,county,quality,status) VALUES($1,$2,$3,$4,$5,$6,$7)', ['Maize', 'Twiga Foods Ltd', 5000, 'kg', 'Juba', 'Grade A', 'open']);
+    await query('INSERT INTO aggregation_schedules(title,location,county,commodity,scheduled_at,contact) VALUES($1,$2,$3,$4,$5,$6)', ['Juba Maize Aggregation', 'Juba Central Market', 'Juba', 'Maize', new Date(Date.now() + 7 * 86400000), phone()]);
+    await query('INSERT INTO quality_standards(commodity,grade,requirements) VALUES($1,$2,$3)', ['Maize', 'Grade A', 'Moisture below 13%, no aflatoxin, clean and dry grains']);
+    await query('UPDATE financial_products SET application_url=$1, literacy_resource=$2 WHERE name=$3', ['https://equitybank.ss/apply', 'Understanding agricultural loans — CORWADO guide', 'Agri Input Loan']);
+  }
 }
 
 if (require.main === module) {

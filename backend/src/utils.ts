@@ -2,7 +2,19 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { config } from './config';
 
-export type Role = 'super_admin' | 'extension_officer' | 'farmer' | 'buyer';
+export type Role =
+  | 'super_admin'
+  | 'extension_officer'
+  | 'digital_champion'
+  | 'farmer'
+  | 'buyer'
+  | 'transporter'
+  | 'agro_dealer'
+  | 'financial_institution'
+  | 'government_officer'
+  | 'research_institution'
+  | 'cooperative_manager'
+  | 'vsla_leader';
 
 export interface AuthUser {
   id: number;

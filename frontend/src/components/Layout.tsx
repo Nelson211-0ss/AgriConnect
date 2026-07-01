@@ -19,10 +19,15 @@ import {
   Smartphone,
   Menu,
   LogOut,
-  Search,
   Leaf,
   ChevronLeft,
+  Building2,
+  Library,
+  BookMarked,
+  Shield,
+  FileEdit,
 } from 'lucide-react';
+import { GlobalSearch } from '@/components/GlobalSearch';
 import { useAuth, ROLE_LABELS, Role } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -43,15 +48,20 @@ const NAV: NavItem[] = [
   { to: '/app/users', label: 'User Accounts', icon: UserPlus, roles: ['super_admin'] },
   { to: '/app/extension-workers', label: 'Extension Workers', icon: UserCog, roles: ['super_admin', 'extension_officer'] },
   { to: '/app/advisories', label: 'Advisories', icon: BookOpen },
+  { to: '/app/knowledge', label: 'Knowledge Base', icon: Library },
   { to: '/app/market', label: 'Market Prices', icon: LineChart },
   { to: '/app/weather', label: 'Weather Alerts', icon: CloudSun },
   { to: '/app/pests', label: 'Pest Alerts', icon: Bug },
   { to: '/app/marketplace', label: 'Marketplace', icon: Store },
+  { to: '/app/directory', label: 'Directory', icon: Building2 },
+  { to: '/app/cooperatives', label: 'Cooperatives & VSLA', icon: BookMarked },
   { to: '/app/financial', label: 'Financial Services', icon: Wallet },
   { to: '/app/messaging', label: 'Messaging Center', icon: MessageSquare, roles: ['super_admin', 'extension_officer'] },
   { to: '/app/training', label: 'Training', icon: GraduationCap },
   { to: '/app/maps', label: 'Maps', icon: Map },
+  { to: '/app/cms', label: 'Content CMS', icon: FileEdit, roles: ['super_admin', 'extension_officer', 'digital_champion'] },
   { to: '/app/reports', label: 'Reports', icon: FileBarChart, roles: ['super_admin', 'extension_officer'] },
+  { to: '/app/audit', label: 'Audit Logs', icon: Shield, roles: ['super_admin', 'extension_officer'] },
   { to: '/app/mobile', label: 'Mobile & Channels', icon: Smartphone },
   { to: '/app/settings', label: 'Settings', icon: Settings },
 ];
@@ -196,13 +206,7 @@ export function Layout() {
             <Menu size={20} />
           </button>
 
-          <div className="relative hidden max-w-md flex-1 sm:block">
-            <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-content-faint" />
-            <input
-              placeholder="Search farmers, advisories, markets..."
-              className="w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-3 text-sm text-ink transition focus:border-forest focus:bg-surface focus:outline-none dark:border-line dark:bg-slate-800 dark:focus:bg-slate-800"
-            />
-          </div>
+          <GlobalSearch className="hidden sm:block" />
 
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />

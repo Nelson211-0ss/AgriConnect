@@ -12,12 +12,20 @@ interface Farmer {
   gender: string;
   phone: string;
   county: string;
+  district: string;
   payam: string;
   boma: string;
+  village: string;
   age: number;
   farm_size: number;
+  farm_ownership: string;
   crop_types: string[];
   livestock_types: string[];
+  irrigation_methods: string[];
+  cooperative_member: boolean;
+  vsla_member: boolean;
+  digital_readiness: string;
+  preferred_comm_channel: string;
   gps_lat: number;
   gps_lng: number;
   status: string;
@@ -27,16 +35,22 @@ interface Farmer {
 const COUNTIES = ['Juba', 'Wau', 'Aweil', 'Bor', 'Rumbek'];
 const CROPS = ['Maize', 'Sorghum', 'Groundnuts', 'Sesame', 'Cassava', 'Millet'];
 const LIVESTOCK = ['Cattle', 'Goats', 'Sheep', 'Poultry'];
+const IRRIGATION = ['Rain-fed', 'Drip', 'Furrow', 'Sprinkler', 'Manual watering'];
+const OWNERSHIP = ['Owned', 'Leased', 'Communal', 'Family land'];
+const READINESS = ['low', 'medium', 'high'];
+const CHANNELS = ['sms', 'whatsapp', 'radio', 'visit', 'phone'];
 
 const emptyForm = {
-  full_name: '', gender: 'Male', phone: '', county: 'Juba', payam: '', boma: '',
-  age: '', farm_size: '', crop_types: [] as string[], livestock_types: [] as string[],
+  full_name: '', gender: 'Male', phone: '', county: 'Juba', district: '', payam: '', boma: '', village: '',
+  age: '', farm_size: '', farm_ownership: 'Owned', crop_types: [] as string[], livestock_types: [] as string[],
+  irrigation_methods: [] as string[], cooperative_member: false, vsla_member: false,
+  digital_readiness: 'medium', preferred_comm_channel: 'sms',
   gps_lat: '', gps_lng: '', status: 'active',
 };
 
 export default function Farmers() {
   const { user } = useAuth();
-  const canEdit = user?.role === 'super_admin' || user?.role === 'extension_officer';
+  const canEdit = user?.role === 'super_admin' || user?.role === 'extension_officer' || user?.role === 'digital_champion';
   const [rows, setRows] = useState<Farmer[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -234,19 +248,21 @@ function FarmerFormModal({ farmer, onClose, onSaved }: { farmer: Farmer | null; 
     ...(farmer
       ? {
           full_name: farmer.full_name || '', gender: farmer.gender || 'Male', phone: farmer.phone || '',
-          county: farmer.county || 'Juba', payam: farmer.payam || '', boma: farmer.boma || '',
-          age: String(farmer.age ?? ''), farm_size: String(farmer.farm_size ?? ''),
-          crop_types: farmer.crop_types || [], livestock_types: farmer.livestock_types || [],
+          county: farmer.county || 'Juba', district: farmer.district || '', payam: farmer.payam || '', boma: farmer.boma || '', village: farmer.village || '',
+          age: String(farmer.age ?? ''), farm_size: String(farmer.farm_size ?? ''), farm_ownership: farmer.farm_ownership || 'Owned',
+          crop_types: farmer.crop_types || [], livestock_types: farmer.livestock_types || [], irrigation_methods: farmer.irrigation_methods || [],
+          cooperative_member: farmer.cooperative_member || false, vsla_member: farmer.vsla_member || false,
+          digital_readiness: farmer.digital_readiness || 'medium', preferred_comm_channel: farmer.preferred_comm_channel || 'sms',
           gps_lat: String(farmer.gps_lat ?? ''), gps_lng: String(farmer.gps_lng ?? ''), status: farmer.status || 'active',
         }
       : {}),
   });
 
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
-  const toggle = (k: 'crop_types' | 'livestock_types', v: string) =>
+  const toggle = (k: 'crop_types' | 'livestock_types' | 'irrigation_methods', v: string) =>
     setForm((f) => ({ ...f, [k]: f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v] }));
 
-  const steps = ['Personal', 'Farm', 'Location', 'Review'];
+  const steps = ['Personal', 'Farm', 'Location', 'Profile', 'Review'];
 
   const save = async () => {
     setSaving(true);
@@ -298,20 +314,18 @@ function FarmerFormModal({ farmer, onClose, onSaved }: { farmer: Farmer | null; 
 
       {step === 2 && (
         <div className="space-y-4">
-          <Input label="Farm Size (hectares)" type="number" step="0.1" value={form.farm_size} onChange={(e) => set('farm_size', e.target.value)} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="Farm Size (hectares)" type="number" step="0.1" value={form.farm_size} onChange={(e) => set('farm_size', e.target.value)} />
+            <Select label="Farm Ownership" value={form.farm_ownership} onChange={(e) => set('farm_ownership', e.target.value)}>
+              {OWNERSHIP.map((o) => <option key={o}>{o}</option>)}
+            </Select>
+          </div>
           <div>
             <span className="mb-2 block text-sm font-medium text-slate-700">Crop Types</span>
             <div className="flex flex-wrap gap-2">
               {CROPS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggle('crop_types', c)}
-                  className={cn(
-                    'rounded-xl border px-3 py-1.5 text-sm font-medium',
-                    form.crop_types.includes(c) ? 'border-forest bg-forest-50 text-forest' : 'border-slate-200 text-slate-500'
-                  )}
-                >
+                <button key={c} type="button" onClick={() => toggle('crop_types', c)}
+                  className={cn('rounded-xl border px-3 py-1.5 text-sm font-medium', form.crop_types.includes(c) ? 'border-forest bg-forest-50 text-forest' : 'border-slate-200 text-slate-500')}>
                   {c}
                 </button>
               ))}
@@ -321,15 +335,19 @@ function FarmerFormModal({ farmer, onClose, onSaved }: { farmer: Farmer | null; 
             <span className="mb-2 block text-sm font-medium text-slate-700">Livestock Types</span>
             <div className="flex flex-wrap gap-2">
               {LIVESTOCK.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => toggle('livestock_types', c)}
-                  className={cn(
-                    'rounded-xl border px-3 py-1.5 text-sm font-medium',
-                    form.livestock_types.includes(c) ? 'border-forest bg-forest-50 text-forest' : 'border-slate-200 text-slate-500'
-                  )}
-                >
+                <button key={c} type="button" onClick={() => toggle('livestock_types', c)}
+                  className={cn('rounded-xl border px-3 py-1.5 text-sm font-medium', form.livestock_types.includes(c) ? 'border-forest bg-forest-50 text-forest' : 'border-slate-200 text-slate-500')}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <span className="mb-2 block text-sm font-medium text-slate-700">Irrigation Methods</span>
+            <div className="flex flex-wrap gap-2">
+              {IRRIGATION.map((c) => (
+                <button key={c} type="button" onClick={() => toggle('irrigation_methods', c)}
+                  className={cn('rounded-xl border px-3 py-1.5 text-sm font-medium', form.irrigation_methods.includes(c) ? 'border-forest bg-forest-50 text-forest' : 'border-slate-200 text-slate-500')}>
                   {c}
                 </button>
               ))}
@@ -341,15 +359,16 @@ function FarmerFormModal({ farmer, onClose, onSaved }: { farmer: Farmer | null; 
       {step === 3 && (
         <div className="grid gap-4 sm:grid-cols-2">
           <Select label="County" value={form.county} onChange={(e) => set('county', e.target.value)}>
-            {COUNTIES.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
+            {COUNTIES.map((c) => <option key={c}>{c}</option>)}
           </Select>
+          <Input label="District" value={form.district} onChange={(e) => set('district', e.target.value)} placeholder="Same as county if not applicable" />
           <Input label="Payam" value={form.payam} onChange={(e) => set('payam', e.target.value)} />
           <Input label="Boma" value={form.boma} onChange={(e) => set('boma', e.target.value)} />
+          <Input label="Village" value={form.village} onChange={(e) => set('village', e.target.value)} />
           <Select label="Status" value={form.status} onChange={(e) => set('status', e.target.value)}>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
           </Select>
           <Input label="GPS Latitude" value={form.gps_lat} onChange={(e) => set('gps_lat', e.target.value)} placeholder="e.g. 4.85" />
           <Input label="GPS Longitude" value={form.gps_lng} onChange={(e) => set('gps_lng', e.target.value)} placeholder="e.g. 31.58" />
@@ -357,16 +376,40 @@ function FarmerFormModal({ farmer, onClose, onSaved }: { farmer: Farmer | null; 
       )}
 
       {step === 4 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select label="Digital Readiness" value={form.digital_readiness} onChange={(e) => set('digital_readiness', e.target.value)}>
+            {READINESS.map((r) => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+          </Select>
+          <Select label="Preferred Communication" value={form.preferred_comm_channel} onChange={(e) => set('preferred_comm_channel', e.target.value)}>
+            {CHANNELS.map((c) => <option key={c} value={c}>{c.toUpperCase()}</option>)}
+          </Select>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.cooperative_member} onChange={(e) => set('cooperative_member', e.target.checked)} />
+            Cooperative member
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.vsla_member} onChange={(e) => set('vsla_member', e.target.checked)} />
+            VSLA member
+          </label>
+        </div>
+      )}
+
+      {step === 5 && (
         <div className="space-y-3 rounded-xl bg-mist p-4 text-sm">
           {[
             ['Name', form.full_name],
             ['Gender / Age', `${form.gender}, ${form.age || '-'}`],
             ['Phone', form.phone],
             ['Farm Size', `${form.farm_size || '-'} ha`],
+            ['Ownership', form.farm_ownership],
             ['Crops', form.crop_types.join(', ') || '-'],
             ['Livestock', form.livestock_types.join(', ') || '-'],
-            ['Location', `${form.county} · ${form.payam} · ${form.boma}`],
+            ['Irrigation', form.irrigation_methods.join(', ') || '-'],
+            ['Location', `${form.county} · ${form.district || '-'} · ${form.payam} · ${form.village || form.boma}`],
             ['GPS', form.gps_lat && form.gps_lng ? `${form.gps_lat}, ${form.gps_lng}` : '-'],
+            ['Digital Readiness', form.digital_readiness],
+            ['Comm Channel', form.preferred_comm_channel],
+            ['Co-op / VSLA', `${form.cooperative_member ? 'Co-op' : ''}${form.cooperative_member && form.vsla_member ? ' + ' : ''}${form.vsla_member ? 'VSLA' : ''}` || 'None'],
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between border-b border-slate-200 pb-2 last:border-0">
               <span className="text-slate-500">{k}</span>
@@ -382,7 +425,7 @@ function FarmerFormModal({ farmer, onClose, onSaved }: { farmer: Farmer | null; 
         <Button variant="outline" onClick={() => (step === 1 ? onClose() : setStep((s) => s - 1))}>
           {step === 1 ? 'Cancel' : 'Back'}
         </Button>
-        {step < 4 ? (
+        {step < 5 ? (
           <Button onClick={() => setStep((s) => s + 1)} disabled={step === 1 && !form.full_name}>
             Next <ChevronRight size={16} />
           </Button>

@@ -21,6 +21,16 @@ import messagingRoutes from './routes/messaging';
 import notificationsRoutes from './routes/notifications';
 import trainingRoutes from './routes/training';
 import reportsRoutes from './routes/reports';
+import cooperativesRoutes from './routes/cooperatives';
+import knowledgeRoutes from './routes/knowledge';
+import directoryRoutes from './routes/directory';
+import searchRoutes from './routes/search';
+import auditRoutes from './routes/audit';
+import ussdRoutes from './routes/ussd';
+import whatsappRoutes from './routes/whatsapp';
+import ivrRoutes from './routes/ivr';
+import cmsRoutes from './routes/cms';
+import marketIntelRoutes from './routes/marketIntel';
 
 const app = express();
 
@@ -59,6 +69,16 @@ app.use('/api/messaging', messagingRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/training', trainingRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/cooperatives', cooperativesRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/directory', directoryRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/ussd', ussdRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/ivr', ivrRoutes);
+app.use('/api/cms', cmsRoutes);
+app.use('/api/market-intel', marketIntelRoutes);
 
 app.use((_req, res) => res.status(404).json({ message: 'Not found' }));
 

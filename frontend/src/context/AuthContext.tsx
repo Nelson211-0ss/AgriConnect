@@ -2,7 +2,19 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { api, setToken, clearToken, getToken } from '@/lib/api';
 import { queueFarmerLoginAlerts, FARMER_LOGIN_ALERTS_KEY } from '@/lib/constants';
 
-export type Role = 'super_admin' | 'extension_officer' | 'farmer' | 'buyer';
+export type Role =
+  | 'super_admin'
+  | 'extension_officer'
+  | 'digital_champion'
+  | 'farmer'
+  | 'buyer'
+  | 'transporter'
+  | 'agro_dealer'
+  | 'financial_institution'
+  | 'government_officer'
+  | 'research_institution'
+  | 'cooperative_manager'
+  | 'vsla_leader';
 
 export interface User {
   id: number;
@@ -28,8 +40,16 @@ const AuthContext = createContext<AuthContextValue>({} as AuthContextValue);
 export const ROLE_LABELS: Record<Role, string> = {
   super_admin: 'Super Admin',
   extension_officer: 'Extension Officer',
+  digital_champion: 'Digital Champion',
   farmer: 'Farmer',
   buyer: 'Buyer',
+  transporter: 'Transporter',
+  agro_dealer: 'Agro-dealer',
+  financial_institution: 'Financial Institution',
+  government_officer: 'Government Officer',
+  research_institution: 'Research Institution',
+  cooperative_manager: 'Cooperative Manager',
+  vsla_leader: 'VSLA Leader',
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {

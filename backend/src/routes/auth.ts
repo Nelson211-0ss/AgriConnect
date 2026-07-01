@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { query } from '../db';
 import { config } from '../config';
 import { asyncHandler, signToken, authenticate, AuthedRequest, Role } from '../utils';
+import { logActivity } from '../services/auditService';
 
 const router = Router();
 
@@ -36,9 +37,18 @@ router.post(
     if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
     const { rows } = await query<UserRow>('SELECT * FROM users WHERE email=$1', [String(email).toLowerCase()]);
     const user = rows[0];
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '');
+    if (!user) {
+      await query('INSERT INTO login_attempts(email,success,ip_address) VALUES($1,false,$2)', [String(email).toLowerCase(), ip]);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!ok) {
+      await query('INSERT INTO login_attempts(email,success,ip_address) VALUES($1,false,$2)', [String(email).toLowerCase(), ip]);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    await query('INSERT INTO login_attempts(email,success,ip_address) VALUES($1,true,$2)', [String(email).toLowerCase(), ip]);
+    await logActivity({ type: 'auth', description: `User login: ${user.email}`, userId: user.id, action: 'login', entityType: 'user', entityId: user.id, ipAddress: ip });
     const payload = { id: user.id, name: user.name, email: user.email, role: user.role };
     return res.json({ token: signToken(payload), user: publicUser(user) });
   })
